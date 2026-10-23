@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "lora-tx (Transmitter)",
+      "path": "lora-tx"
+    },
+    {
+      "name": "lora-rx (Receiver)",
+      "path": "lora-rx"
+    }
+  ],
+  "settings": {}
+}

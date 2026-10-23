@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "skills": {
+    "arduino-code-generator": {
+      "source": "wedsamuel1230/embedded-engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/arduino-code-generator/SKILL.md",
+      "computedHash": "adcef60ef16835e54b5b90f45a3cce192abf15ab62b62c93eaa91089b2449290"
+    },
+    "arduino-project-builder": {
+      "source": "wedsamuel1230/embedded-engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/arduino-project-builder/SKILL.md",
+      "computedHash": "686bd91ab0cf1df3e2c5996a89c1abbd33e64d867acbce70bbfd6c8c496fb08d"
+    },
+    "embedded-systems": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/embedded-systems/SKILL.md",
+      "computedHash": "ad33fcf4813ed925f0b8de6a8d3ec5ffe9151c3fd6e8ca4aeb26729f15984dba"
+    },
+    "esp32-firmware-engineer": {
+      "source": "adamlipecz/esp32-firmware-engineer-skill",
+      "sourceType": "github",
+      "skillPath": "esp32-firmware-engineer/SKILL.md",
+      "computedHash": "3df8fc9d1ba783e4f09c59cf728cfb73cecfca89eece4a3b5b7d7e3e62068b6e"
+    },
+    "grill-me": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/grill-me/SKILL.md",
+      "computedHash": "9cdbb4b8f7a3aeaef82e6230c9e823500d4a8a1214c726cf342cf9829d34fc7d"
+    },
+    "grilling": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/grilling/SKILL.md",
+      "computedHash": "ef1641a2047b71b60f1942cd35efb47d3afc9d584dff5a0b01f8c7db923aaa08"
+    },
+    "iot-architect": {
+      "source": "1999azzar/iot-architect-skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "460b7e83bcd3c83e958208e777aa24f74c60a371909d218485101dc3ee01a984"
+    },
+    "pin-assignment": {
+      "source": "wedsamuel1230/embedded-engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/pin-assignment/SKILL.md",
+      "computedHash": "14dc9d0df9b10e5949c5ed82efc5c0c8224685f88b24484134a9d931228c9818"
+    },
+    "platformio": {
+      "source": "o2scale/electronics-agent-kit",
+      "sourceType": "github",
+      "skillPath": ".agent/skills/platformio/SKILL.md",
+      "computedHash": "6a717c8804ed3e96219fb22ef22b73ff2802480b1f040910fd0e8a9ec77dc2d3"
+    },
+    "wireless-telemetry": {
+      "source": "wedsamuel1230/embedded-engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wireless-telemetry/SKILL.md",
+      "computedHash": "aec23ce076a043ba58c8e08412c698a7d7f4f7cf96c249029bd15d8b37ede751"
+    },
+    "wiring-safety-check": {
+      "source": "wedsamuel1230/embedded-engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wiring-safety-check/SKILL.md",
+      "computedHash": "0282f1d862d103afafe126d8d0e18c33244b500912407ebbee2776a2fa53117f"
+    }
+  }
+}

@@ -1,17 +1,37 @@
 {
   "configurations": [
     {
-      "name": "windows-gcc-x64",
+      "name": "ESP32 (PlatformIO)",
       "includePath": [
-        "${workspaceFolder}/**"
+        "${workspaceFolder}/lora-tx/include",
+        "${workspaceFolder}/lora-tx/src",
+        "${workspaceFolder}/lora-tx/lib/**",
+        "${workspaceFolder}/lora-tx/.pio/libdeps/esp32doit-devkit-v1/**",
+        "${workspaceFolder}/lora-rx/include",
+        "${workspaceFolder}/lora-rx/src",
+        "${workspaceFolder}/lora-rx/lib/**",
+        "${workspaceFolder}/lora-rx/.pio/libdeps/esp32doit-devkit-v1/**",
+        "/home/asril/.platformio/packages/framework-arduinoespressif32/cores/esp32",
+        "/home/asril/.platformio/packages/framework-arduinoespressif32/variants/doitESP32devkitV1",
+        "/home/asril/.platformio/packages/framework-arduinoespressif32/libraries/**",
+        "/home/asril/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/**",
+        "/home/asril/.platformio/packages/toolchain-xtensa-esp32/xtensa-esp32-elf/include/**"
       ],
-      "compilerPath": "C:/MinGW/bin/gcc.exe",
-      "cStandard": "${default}",
-      "cppStandard": "${default}",
-      "intelliSenseMode": "windows-gcc-x64",
-      "compilerArgs": [
-        ""
-      ]
+      "defines": [
+        "PLATFORMIO=60119",
+        "ARDUINO_ESP32_DEV",
+        "ESP32",
+        "ESP_PLATFORM",
+        "F_CPU=240000000L",
+        "ARDUINO=10812",
+        "ARDUINO_ARCH_ESP32",
+        "ARDUINO_VARIANT=\"doitESP32devkitV1\"",
+        "ARDUINO_BOARD=\"DOIT ESP32 DEVKIT V1\""
+      ],
+      "compilerPath": "/home/asril/.platformio/packages/toolchain-xtensa-esp32/bin/xtensa-esp32-elf-gcc",
+      "cStandard": "gnu99",
+      "cppStandard": "gnu++11",
+      "intelliSenseMode": "gcc-x64"
     }
   ],
   "version": 4
