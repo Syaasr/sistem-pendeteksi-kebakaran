@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FireGuard LoRa - Sistem Monitoring & Deteksi Kebakaran</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff1f2',
+              500: '#f43f5e',
+              600: '#e11d48',
+              700: '#be123c',
+              900: '#4c0519',
+            }
+          },
+          animation: {
+            'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    .glow-danger {
+      box-shadow: 0 0 35px -5px rgba(239, 68, 68, 0.5);
+    }
+    .glow-safe {
+      box-shadow: 0 0 35px -5px rgba(34, 197, 94, 0.25);
+    }
+    .glow-warning {
+      box-shadow: 0 0 35px -5px rgba(234, 179, 8, 0.35);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-rose-500 selection:text-white">
+
+  <!-- TOP NAVBAR -->
+  <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Logo & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center shadow-lg shadow-rose-900/40">
+          <i class="fa-solid fa-fire-flame-curved text-white text-xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">FireGuard <span class="text-rose-500">LoRa</span></h1>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">WMC IoT</span>
+          </div>
+          <p class="text-xs text-slate-400">Sistem Deteksi & Monitoring Kebakaran Real-Time</p>
+        </div>
+      </div>
+
+      <!-- Header Center: Status Badges -->
+      <div class="hidden md:flex items-center gap-3">
+        <!-- LoRa Node Badge -->
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs">
+          <i class="fa-solid fa-tower-broadcast text-sky-400"></i>
+          <span class="text-slate-400">Node:</span>
+          <span class="font-semibold text-slate-200" id="headerNodeId">TX-01 (Lab WMC)</span>
+        </div>
+
+        <!-- LoRa Link Status -->
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" id="pingIndicator"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" id="pingDot"></span>
+          </span>
+          <span class="text-slate-400">LoRa Link:</span>
+          <span class="font-semibold text-emerald-400" id="headerLinkStatus">Terhubung</span>
+          <span class="font-mono text-[11px] text-slate-400" id="headerRssi">(-72 dBm)</span>
+        </div>
+
+        <!-- Clock -->
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs font-mono text-slate-300">
+          <i class="fa-regular fa-clock text-slate-400"></i>
+          <span id="liveClock">17:45:00</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2">
+        <!-- Audio Alarm Toggle -->
+        <button id="btnAlarmMute" onclick="toggleAudioAlarm()" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 flex items-center gap-2 transition" title="Toggle Suara Alarm">
+          <i class="fa-solid fa-volume-high text-emerald-400" id="alarmIcon"></i>
+          <span class="hidden sm:inline" id="alarmText">Sirine Aktif</span>
+        </button>
+
+        <!-- Mode Indicator (Demo vs Live) -->
+        <div class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
+          <i class="fa-solid fa-flask"></i>
+          <span id="dataModeBadge">Mode Simulasi</span>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- INTERACTIVE SIMULATION & DEMO TOOLBAR (Bagus banget untuk presentasi/konsul kelompok) -->
+  <section class="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border-b border-slate-800 py-2.5 px-4">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2 text-slate-400">
+        <i class="fa-solid fa-sliders text-rose-400"></i>
+        <span class="font-medium text-slate-300">Uji Coba Respon Cepat (Simulasi Konsultasi):</span>
+        <span class="hidden sm:inline text-slate-500">Klik tombol di kanan untuk mengetes respon visual & sirine web</span>
+      </div>
+      
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <button onclick="setSimulationPreset('safe')" class="px-2.5 py-1 rounded bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 hover:bg-emerald-800/50 transition flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Normal (Aman)
+        </button>
+        <button onclick="setSimulationPreset('warning')" class="px-2.5 py-1 rounded bg-amber-950/80 border border-amber-700/60 text-amber-300 hover:bg-amber-800/50 transition flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span> Waspada (Gas/Suhu)
+        </button>
+        <button onclick="setSimulationPreset('danger')" class="px-2.5 py-1 rounded bg-rose-950/80 border border-rose-700/60 text-rose-300 hover:bg-rose-800/50 transition flex items-center gap-1.5 font-semibold animate-pulse">
+          <span class="w-2 h-2 rounded-full bg-rose-400"></span> Bahaya (Api Terdeteksi!)
+        </button>
+        <button id="btnAutoSim" onclick="toggleAutoSim()" class="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-play text-slate-400" id="autoSimIcon"></i>
+          <span id="autoSimText">Auto Acak</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- HERO: STATUS BAHAYA KEBAKARAN (DYNAMIC STATE) -->
+    <div id="statusHeroCard" class="relative overflow-hidden rounded-2xl p-6 transition-all duration-500 bg-gradient-to-r from-emerald-950/50 via-slate-900 to-slate-900 border border-emerald-800/50 glow-safe">
+      <div class="absolute -right-10 -bottom-10 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none transition-colors duration-500" id="heroGlow"></div>
+      
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-start gap-4">
+          <!-- Status Icon -->
+          <div id="statusIconWrap" class="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-3xl flex-shrink-0 transition-all duration-300">
+            <i class="fa-solid fa-shield-halved" id="statusMainIcon"></i>
+          </div>
+          <!-- Status Title & Desc -->
+          <div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs uppercase font-extrabold tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" id="statusLevelBadge">Level 0: Safe</span>
+              <span class="text-xs text-slate-400 font-mono" id="lastPacketTime">Terakhir update: baru saja</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-1.5 tracking-tight" id="statusMainTitle">SISTEM AMAN - TIDAK ADA INDIKASI API</h2>
+            <p class="text-sm text-slate-300 mt-1 max-w-2xl" id="statusMainDesc">Sensor MQ-2, Flame, dan DHT22 membaca kondisi normal di area pemantauan.</p>
+          </div>
+        </div>
+
+        <!-- Quick Summary Mini Metrics -->
+        <div class="flex items-center gap-4 border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-6">
+          <div class="text-center">
+            <span class="text-[11px] text-slate-400 uppercase font-semibold">Tingkat Bahaya</span>
+            <div class="text-2xl font-black font-mono text-emerald-400" id="heroLevelNumber">0<span class="text-xs font-normal text-slate-400">/2</span></div>
+          </div>
+          <div class="h-8 w-[1px] bg-slate-800"></div>
+          <div class="text-center">
+            <span class="text-[11px] text-slate-400 uppercase font-semibold">Status Api</span>
+            <div class="text-sm font-bold text-emerald-400 mt-1" id="heroFlameStatus">PADAM</div>
+          </div>
+          <div class="h-8 w-[1px] bg-slate-800"></div>
+          <div class="text-center">
+            <span class="text-[11px] text-slate-400 uppercase font-semibold">Buzzer RX</span>
+            <div class="text-sm font-bold text-slate-400 mt-1" id="heroBuzzerStatus">SILENT</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- METRIC CARDS GRID (Sesuai Sensor: DHT22, MQ-2, Flame, LoRa) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <!-- CARD 1: SUHU RUANGAN (DHT22) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Suhu Lingkungan</span>
+          <div class="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-400 flex items-center justify-center">
+            <i class="fa-solid fa-temperature-three-quarters"></i>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-white font-mono" id="valTemp">29.4</span>
+          <span class="text-lg text-slate-400 font-semibold">°C</span>
+        </div>
+        <!-- Progress / Condition -->
+        <div class="mt-3">
+          <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+            <span id="tempStatus">Suhu Normal</span>
+            <span id="tempPercent">Threshold: > 50°C</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div id="tempBar" class="bg-gradient-to-r from-sky-400 to-orange-400 h-1.5 rounded-full transition-all duration-300" style="width: 35%"></div>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-800/80 flex justify-between text-[11px] text-slate-400">
+          <span>Sensor: DHT22</span>
+          <span class="text-slate-300">Target: < 40°C</span>
+        </div>
+      </div>
+
+      <!-- CARD 2: KELEMBABAN UDARA (DHT22) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Kelembaban Udara</span>
+          <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center">
+            <i class="fa-solid fa-droplet"></i>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-white font-mono" id="valHum">62.0</span>
+          <span class="text-lg text-slate-400 font-semibold">% RH</span>
+        </div>
+        <!-- Progress -->
+        <div class="mt-3">
+          <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+            <span id="humStatus">Kelembaban Ideal</span>
+            <span>Optimal: 40-70%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div id="humBar" class="bg-sky-400 h-1.5 rounded-full transition-all duration-300" style="width: 62%"></div>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-800/80 flex justify-between text-[11px] text-slate-400">
+          <span>Sensor: DHT22</span>
+          <span class="text-slate-300">Status: Basah / Segar</span>
+        </div>
+      </div>
+
+      <!-- CARD 3: KADAR GAS & ASAP (MQ-2) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Sensor Gas & Asap</span>
+          <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+            <i class="fa-solid fa-smog"></i>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-white font-mono" id="valGasAO">210</span>
+          <span class="text-xs text-slate-400 font-semibold uppercase">ADC (AO)</span>
+        </div>
+        <!-- Progress -->
+        <div class="mt-3">
+          <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+            <span id="gasStatusText">Udara Bersih</span>
+            <span id="gasThreshold">Batas Aman: < 400</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div id="gasBar" class="bg-emerald-400 h-1.5 rounded-full transition-all duration-300" style="width: 15%"></div>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-800/80 flex justify-between text-[11px] text-slate-400">
+          <span>Sensor: MQ-2</span>
+          <span class="text-slate-300">Digital Pin: <b id="valGasDigital" class="text-emerald-400">0 (LOW)</b></span>
+        </div>
+      </div>
+
+      <!-- CARD 4: DETEKSI API (FLAME SENSOR) & LORA LINK -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Deteksi Api & Sinyal</span>
+          <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center">
+            <i class="fa-solid fa-fire"></i>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center justify-between">
+          <div>
+            <div class="text-2xl font-extrabold font-mono text-emerald-400" id="valFlame">PADAM</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Flame AO: <span id="valFlameAO" class="font-mono text-slate-200">3850</span></p>
+          </div>
+          <!-- Flame Badge Icon -->
+          <div id="flameBadge" class="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-slate-500 text-xl border border-slate-700">
+            <i class="fa-solid fa-fire"></i>
+          </div>
+        </div>
+        <!-- RSSI & LoRa Info -->
+        <div class="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+          <div class="flex items-center gap-1.5 text-slate-400">
+            <i class="fa-solid fa-signal text-sky-400"></i>
+            <span>LoRa RSSI:</span>
+          </div>
+          <span class="font-mono font-semibold text-slate-200" id="valRssi">-72 dBm</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MIDDLE SECTION: REAL-TIME CHARTS & NODE DIAGRAM -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- CHART: GRAFIK TREN SUHU & GAS (2 Kolom di Desktop) -->
+      <div class="lg:col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-rose-500"></i>
+              Grafik Tren Suhu & Kadar Gas (Real-Time)
+            </h3>
+            <p class="text-xs text-slate-400">Pembaruan data setiap paket LoRa diterima dari Node TX</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span> Suhu (°C)
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span> Gas MQ-2
+            </span>
+          </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="relative h-64 sm:h-72 w-full">
+          <canvas id="fireTrendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- TOPOLOGY / ARSITEKTUR FISIK (Sangat disukai dosen saat presentasi) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-network-wired text-sky-400"></i>
+              Topologi LoRa IoT
+            </h3>
+            <span class="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-full font-mono">SX1278 433MHz</span>
+          </div>
+
+          <!-- Flow steps -->
+          <div class="space-y-3">
+            <!-- Node TX Box -->
+            <div class="p-3 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-orange-500/10 text-orange-400 flex items-center justify-center font-bold text-sm">
+                  TX
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-white">Node Sensor (ESP32)</h4>
+                  <p class="text-[10px] text-slate-400">DHT22 + MQ-2 + Flame</p>
+                </div>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">ONLINE</span>
+            </div>
+
+            <!-- Wireless Wave Indicator -->
+            <div class="flex items-center justify-center gap-2 text-slate-500 py-1 text-xs font-mono">
+              <i class="fa-solid fa-arrow-down animate-bounce text-sky-400"></i>
+              <span>LoRa Radio Link (433.0 MHz)</span>
+              <i class="fa-solid fa-arrow-down animate-bounce text-sky-400"></i>
+            </div>
+
+            <!-- Node RX Box -->
+            <div class="p-3 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold text-sm">
+                  RX
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-white">Gateway Receiver (ESP32)</h4>
+                  <p class="text-[10px] text-slate-400">LCD 16x2 + Buzzer + Wi-Fi</p>
+                </div>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">GATEWAY</span>
+            </div>
+
+            <!-- Cloud Database Box -->
+            <div class="p-3 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-sm">
+                  <i class="fa-solid fa-cloud"></i>
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-white">Firebase Realtime DB</h4>
+                  <p class="text-[10px] text-slate-400">Sync Data & Historical Logs</p>
+                </div>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono">CONNECTED</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between items-center">
+          <span>Latensi Rata-rata: <b class="text-slate-200 font-mono">~180 ms</b></span>
+          <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> Jaringan Stabil</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM SECTION: LOG RIWAYAT & KEJADIAN (HISTORICAL AUDIT LOG) -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-clipboard-list text-slate-400"></i>
+            Log Riwayat Deteksi & Anomali
+          </h3>
+          <p class="text-xs text-slate-400">Pencatatan riwayat setiap kenaikan status bahaya atau perubahan sensor</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Tombol Export CSV -->
+          <button onclick="exportLogsToCSV()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 flex items-center gap-2 transition">
+            <i class="fa-solid fa-file-arrow-down text-emerald-400"></i>
+            <span>Export CSV</span>
+          </button>
+          <!-- Tombol Clear Log -->
+          <button onclick="clearLogsTable()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-400 hover:text-slate-200 transition">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto rounded-xl border border-slate-800">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="bg-slate-950/60 text-slate-400 uppercase font-semibold border-b border-slate-800 text-[11px]">
+            <tr>
+              <th class="px-4 py-3">Waktu</th>
+              <th class="px-4 py-3">Node</th>
+              <th class="px-4 py-3">Status Bahaya</th>
+              <th class="px-4 py-3">Suhu</th>
+              <th class="px-4 py-3">Gas (AO)</th>
+              <th class="px-4 py-3">Api (Flame)</th>
+              <th class="px-4 py-3">LoRa RSSI</th>
+              <th class="px-4 py-3 text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="logsTableBody" class="divide-y divide-slate-800/60 font-mono">
+            <!-- Dynamic rows inserted via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-slate-900 border-t border-slate-800 py-4 px-4 text-center text-xs text-slate-400 mt-auto">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <p>Projek WMC (Wireless & Mobile Computing) — Sistem Deteksi Kebakaran LoRa SX1278</p>
+      <p class="text-slate-400">Branch: <span class="text-rose-400 font-mono">Seno</span> | Versi 1.0.0</p>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // ==========================================
+    // 1. STATE & VARIABLES
+    // ==========================================
+    let currentData = {
+      level: 0,        // 0: Aman, 1: Waspada, 2: Bahaya
+      flame: 0,        // 0: Padam, 1: Ada Api
+      gas: 0,          // Digital pin
+      gasAO: 195,      // Analog pin (0 - 4095)
+      flameAO: 3890,   // Analog pin Flame (Tinggi = Padam, Rendah = Ada Api)
+      temp: 29.4,      // Suhu (°C)
+      hum: 62.0,       // Kelembaban (%)
+      rssi: -72,       // dBm
+      nodeId: 'TX-01 (Lab WMC)',
+      timestamp: new Date()
+    };
+
+    let isAudioAlarmEnabled = true;
+    let isAutoSimRunning = false;
+    let autoSimTimer = null;
+    let audioContext = null;
+    let alarmOscillator = null;
+    let isAlarmSounding = false;
+
+    // History data for Chart.js
+    const maxHistoryPoints = 15;
+    let chartLabels = [];
+    let chartTempData = [];
+    let chartGasData = [];
+    let fireChart = null;
+
+    // Event Logs Array
+    let logRecords = [
+      { time: '17:40:12', node: 'TX-01', level: 0, temp: 28.9, gasAO: 180, flame: 0, rssi: -74, note: 'Sistem Inisialisasi Normal' },
+      { time: '17:42:05', node: 'TX-01', level: 0, temp: 29.2, gasAO: 195, flame: 0, rssi: -72, note: 'Koneksi LoRa Stabil' }
+    ];
+
+    // ==========================================
+    // 2. INITIALIZATION
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      initChart();
+      updateClock();
+      setInterval(updateClock, 1000);
+      renderUI();
+      renderLogsTable();
+
+      // Seed chart with initial points
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 3000);
+        const timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        pushChartData(timeStr, 29 + Math.random() * 1.5, 180 + Math.random() * 30);
+      }
+    });
+
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('liveClock').textContent = now.toLocaleTimeString('id-ID');
+    }
+
+    // ==========================================
+    // 3. CHART SETUP (Chart.js)
+    // ==========================================
+    function initChart() {
+      const ctx = document.getElementById('fireTrendChart').getContext('2d');
+      fireChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: chartLabels,
+          datasets: [
+            {
+              label: 'Suhu (°C)',
+              data: chartTempData,
+              borderColor: '#f43f5e', // rose-500
+              backgroundColor: 'rgba(244, 63, 94, 0.1)',
+              borderWidth: 2.5,
+              tension: 0.35,
+              fill: true,
+              yAxisID: 'yTemp',
+              pointRadius: 3,
+              pointBackgroundColor: '#f43f5e'
+            },
+            {
+              label: 'Gas MQ-2 (AO)',
+              data: chartGasData,
+              borderColor: '#f59e0b', // amber-500
+              backgroundColor: 'rgba(245, 158, 11, 0.05)',
+              borderWidth: 2,
+              tension: 0.35,
+              fill: false,
+              yAxisID: 'yGas',
+              pointRadius: 3,
+              pointBackgroundColor: '#f59e0b'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 400 },
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              borderColor: '#334155',
+              borderWidth: 1,
+              titleFont: { family: 'Inter', size: 12 },
+              bodyFont: { family: 'JetBrains Mono', size: 11 }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(51, 65, 85, 0.4)' },
+              ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } }
+            },
+            yTemp: {
+              type: 'linear',
+              position: 'left',
+              min: 20,
+              max: 90,
+              grid: { color: 'rgba(51, 65, 85, 0.4)' },
+              ticks: {
+                color: '#f43f5e',
+                font: { family: 'JetBrains Mono', size: 10 },
+                callback: (v) => v + '°C'
+              }
+            },
+            yGas: {
+              type: 'linear',
+              position: 'right',
+              min: 0,
+              max: 1200,
+              grid: { drawOnChartArea: false },
+              ticks: {
+                color: '#f59e0b',
+                font: { family: 'JetBrains Mono', size: 10 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function pushChartData(label, temp, gas) {
+      if (chartLabels.length >= maxHistoryPoints) {
+        chartLabels.shift();
+        chartTempData.shift();
+        chartGasData.shift();
+      }
+      chartLabels.push(label);
+      chartTempData.push(temp.toFixed(1));
+      chartGasData.push(Math.round(gas));
+      if (fireChart) fireChart.update();
+    }
+
+    // ==========================================
+    // 4. UI RENDER ENGINE
+    // ==========================================
+    function renderUI() {
+      // Numerical metrics
+      document.getElementById('valTemp').textContent = currentData.temp.toFixed(1);
+      document.getElementById('valHum').textContent = currentData.hum.toFixed(1);
+      document.getElementById('valGasAO').textContent = Math.round(currentData.gasAO);
+      document.getElementById('valFlameAO').textContent = Math.round(currentData.flameAO);
+      document.getElementById('valRssi').textContent = currentData.rssi + ' dBm';
+      document.getElementById('headerRssi').textContent = '(' + currentData.rssi + ' dBm)';
+      
+      // Digital Gas
+      const gasEl = document.getElementById('valGasDigital');
+      if (currentData.gas === 1) {
+        gasEl.textContent = '1 (HIGH - GAS BOCOR)';
+        gasEl.className = 'text-rose-400 font-bold';
+      } else {
+        gasEl.textContent = '0 (LOW - AMAN)';
+        gasEl.className = 'text-emerald-400';
+      }
+
+      // Progress bars
+      const tempPercent = Math.min(Math.max(((currentData.temp - 20) / (70 - 20)) * 100, 5), 100);
+      document.getElementById('tempBar').style.width = tempPercent + '%';
+
+      const humPercent = Math.min(Math.max(currentData.hum, 5), 100);
+      document.getElementById('humBar').style.width = humPercent + '%';
+
+      const gasPercent = Math.min(Math.max((currentData.gasAO / 1000) * 100, 5), 100);
+      document.getElementById('gasBar').style.width = gasPercent + '%';
+
+      // Gas Status bar color
+      const gasBarEl = document.getElementById('gasBar');
+      if (currentData.gasAO > 500) {
+        gasBarEl.className = 'bg-rose-500 h-1.5 rounded-full';
+        document.getElementById('gasStatusText').textContent = 'Pekat / Bahaya!';
+        document.getElementById('gasStatusText').className = 'text-rose-400 font-bold';
+      } else if (currentData.gasAO > 300) {
+        gasBarEl.className = 'bg-amber-400 h-1.5 rounded-full';
+        document.getElementById('gasStatusText').textContent = 'Ada Asap/Gas';
+        document.getElementById('gasStatusText').className = 'text-amber-400';
+      } else {
+        gasBarEl.className = 'bg-emerald-400 h-1.5 rounded-full';
+        document.getElementById('gasStatusText').textContent = 'Udara Bersih';
+        document.getElementById('gasStatusText').className = 'text-slate-400';
+      }
+
+      // Flame Sensor Visual
+      const valFlameEl = document.getElementById('valFlame');
+      const flameBadgeEl = document.getElementById('flameBadge');
+      const heroFlameEl = document.getElementById('heroFlameStatus');
+
+      if (currentData.flame === 1) {
+        valFlameEl.textContent = 'TERDETEKSI!';
+        valFlameEl.className = 'text-2xl font-extrabold font-mono text-rose-500 animate-pulse';
+        flameBadgeEl.className = 'w-12 h-12 rounded-xl bg-rose-600/30 text-rose-400 flex items-center justify-center text-2xl border border-rose-500 shadow-lg shadow-rose-900/50 animate-bounce';
+        heroFlameEl.textContent = 'ADA API!';
+        heroFlameEl.className = 'text-sm font-bold text-rose-400 animate-pulse';
+      } else {
+        valFlameEl.textContent = 'PADAM';
+        valFlameEl.className = 'text-2xl font-extrabold font-mono text-emerald-400';
+        flameBadgeEl.className = 'w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-slate-500 text-xl border border-slate-700';
+        heroFlameEl.textContent = 'PADAM';
+        heroFlameEl.className = 'text-sm font-bold text-emerald-400';
+      }
+
+      // ==========================================
+      // HERO STATUS COLOR & BANNER LOGIC (3 LEVELS)
+      // ==========================================
+      const heroCard = document.getElementById('statusHeroCard');
+      const iconWrap = document.getElementById('statusIconWrap');
+      const mainIcon = document.getElementById('statusMainIcon');
+      const badge = document.getElementById('statusLevelBadge');
+      const mainTitle = document.getElementById('statusMainTitle');
+      const mainDesc = document.getElementById('statusMainDesc');
+      const levelNumber = document.getElementById('heroLevelNumber');
+      const buzzerStatus = document.getElementById('heroBuzzerStatus');
+
+      levelNumber.innerHTML = currentData.level + '<span class="text-xs font-normal text-slate-400">/2</span>';
+
+      if (currentData.level === 2) {
+        // LEVEL 2: BAHAYA KEBAKARAN
+        heroCard.className = 'relative overflow-hidden rounded-2xl p-6 transition-all duration-500 bg-gradient-to-r from-rose-950 via-slate-900 to-slate-900 border-2 border-rose-500 glow-danger animate-pulse-fast';
+        iconWrap.className = 'w-16 h-16 rounded-2xl bg-rose-600/30 border border-rose-500 flex items-center justify-center text-rose-400 text-3xl flex-shrink-0 animate-bounce';
+        mainIcon.className = 'fa-solid fa-triangle-exclamation';
+        badge.className = 'text-xs uppercase font-extrabold tracking-widest px-2.5 py-0.5 rounded-full bg-rose-500 text-white shadow-lg shadow-rose-600/50';
+        badge.textContent = 'LEVEL 2: EMERGENCY FIRE!';
+        mainTitle.textContent = 'PERINGATAN BAHAYA: KEBAKARAN TERDETEKSI!';
+        mainTitle.className = 'text-2xl sm:text-3xl font-extrabold text-rose-400 mt-1.5 tracking-tight';
+        mainDesc.textContent = 'Sensor api aktif atau konsentrasi gas/suhu ekstrem! Buzzer RX menyala terus-menerus.';
+        buzzerStatus.textContent = 'ALARM ON (2700Hz)';
+        buzzerStatus.className = 'text-sm font-bold text-rose-400 animate-pulse';
+        
+        // Play web alarm sound if enabled
+        playAlarmAudio(true);
+
+      } else if (currentData.level === 1) {
+        // LEVEL 1: WASPADA
+        heroCard.className = 'relative overflow-hidden rounded-2xl p-6 transition-all duration-500 bg-gradient-to-r from-amber-950/60 via-slate-900 to-slate-900 border border-amber-500/70 glow-warning';
+        iconWrap.className = 'w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-3xl flex-shrink-0';
+        mainIcon.className = 'fa-solid fa-circle-exclamation';
+        badge.className = 'text-xs uppercase font-extrabold tracking-widest px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
+        badge.textContent = 'LEVEL 1: WASPADA';
+        mainTitle.textContent = 'WASPADA: INDIKASI PENINGKATAN SUHU / ASAP';
+        mainTitle.className = 'text-2xl sm:text-3xl font-extrabold text-amber-300 mt-1.5 tracking-tight';
+        mainDesc.textContent = 'Terdeteksi kepulan gas MQ-2 atau suhu melebihi ambang batas awal. Periksa lokasi.';
+        buzzerStatus.textContent = 'BEEP WARN (2000Hz)';
+        buzzerStatus.className = 'text-sm font-bold text-amber-400';
+
+        playAlarmAudio(false);
+
+      } else {
+        // LEVEL 0: AMAN
+        heroCard.className = 'relative overflow-hidden rounded-2xl p-6 transition-all duration-500 bg-gradient-to-r from-emerald-950/50 via-slate-900 to-slate-900 border border-emerald-800/50 glow-safe';
+        iconWrap.className = 'w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-3xl flex-shrink-0';
+        mainIcon.className = 'fa-solid fa-shield-halved';
+        badge.className = 'text-xs uppercase font-extrabold tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        badge.textContent = 'LEVEL 0: SAFE';
+        mainTitle.textContent = 'SISTEM AMAN - TIDAK ADA INDIKASI API';
+        mainTitle.className = 'text-2xl sm:text-3xl font-extrabold text-white mt-1.5 tracking-tight';
+        mainDesc.textContent = 'Sensor MQ-2, Flame, dan DHT22 membaca kondisi normal di area pemantauan.';
+        buzzerStatus.textContent = 'STANDBY';
+        buzzerStatus.className = 'text-sm font-bold text-slate-400';
+
+        playAlarmAudio(false);
+      }
+    }
+
+    // ==========================================
+    // 5. SIMULATION PRESETS
+    // ==========================================
+    function setSimulationPreset(mode) {
+      const nowTime = new Date().toLocaleTimeString('id-ID');
+
+      if (mode === 'safe') {
+        currentData.level = 0;
+        currentData.flame = 0;
+        currentData.gas = 0;
+        currentData.gasAO = 180 + Math.random() * 20;
+        currentData.flameAO = 3850 + Math.random() * 80;
+        currentData.temp = 28.5 + Math.random() * 1.5;
+        currentData.hum = 60 + Math.random() * 4;
+        currentData.rssi = -70 - Math.floor(Math.random() * 6);
+        addLogRecord('Kondisi kembali normal (Aman)');
+      } 
+      else if (mode === 'warning') {
+        currentData.level = 1;
+        currentData.flame = 0;
+        currentData.gas = 1;
+        currentData.gasAO = 450 + Math.random() * 50;
+        currentData.flameAO = 3100;
+        currentData.temp = 38.5 + Math.random() * 2;
+        currentData.hum = 48;
+        currentData.rssi = -75;
+        addLogRecord('Waspada: Peningkatan kadar asap MQ-2');
+      } 
+      else if (mode === 'danger') {
+        currentData.level = 2;
+        currentData.flame = 1; // Api terdeteksi!
+        currentData.gas = 1;
+        currentData.gasAO = 820 + Math.random() * 60;
+        currentData.flameAO = 420; // Sangat rendah = radiasi api dekat
+        currentData.temp = 58.4 + Math.random() * 6;
+        currentData.hum = 32;
+        currentData.rssi = -80;
+        addLogRecord('BAHAYA: Api terdeteksi oleh Flame Sensor!');
+      }
+
+      pushChartData(nowTime, currentData.temp, currentData.gasAO);
+      renderUI();
+    }
+
+    // Auto Simulation Generator (Runs periodically)
+    function toggleAutoSim() {
+      const btn = document.getElementById('btnAutoSim');
+      const icon = document.getElementById('autoSimIcon');
+      const text = document.getElementById('autoSimText');
+
+      if (!isAutoSimRunning) {
+        isAutoSimRunning = true;
+        btn.className = 'px-2.5 py-1 rounded bg-rose-600 border border-rose-500 text-white font-medium flex items-center gap-1.5';
+        icon.className = 'fa-solid fa-stop';
+        text.textContent = 'Stop Acak';
+
+        autoSimTimer = setInterval(() => {
+          // Dynamic jitter simulation
+          const nowTime = new Date().toLocaleTimeString('id-ID');
+          if (currentData.level === 0) {
+            currentData.temp += (Math.random() - 0.5) * 0.4;
+            currentData.gasAO += (Math.random() - 0.5) * 10;
+            currentData.rssi = -68 - Math.floor(Math.random() * 8);
+          } else if (currentData.level === 2) {
+            currentData.temp += (Math.random() - 0.3) * 0.6;
+            currentData.gasAO += (Math.random() - 0.3) * 15;
+          }
+          pushChartData(nowTime, currentData.temp, currentData.gasAO);
+          renderUI();
+        }, 2000);
+
+      } else {
+        isAutoSimRunning = false;
+        clearInterval(autoSimTimer);
+        btn.className = 'px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5';
+        icon.className = 'fa-solid fa-play text-slate-400';
+        text.textContent = 'Auto Acak';
+      }
+    }
+
+    // ==========================================
+    // 6. LOGS & AUDIT TRAIL
+    // ==========================================
+    function addLogRecord(note) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('id-ID');
+      logRecords.unshift({
+        time: timeStr,
+        node: 'TX-01',
+        level: currentData.level,
+        temp: currentData.temp.toFixed(1),
+        gasAO: Math.round(currentData.gasAO),
+        flame: currentData.flame,
+        rssi: currentData.rssi,
+        note: note
+      });
+      if (logRecords.length > 25) logRecords.pop();
+      renderLogsTable();
+    }
+
+    function renderLogsTable() {
+      const tbody = document.getElementById('logsTableBody');
+      tbody.innerHTML = '';
+
+      logRecords.forEach((item, index) => {
+        let badgeLevel = '';
+        if (item.level === 2) {
+          badgeLevel = '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold">LEVEL 2: BAHAYA</span>';
+        } else if (item.level === 1) {
+          badgeLevel = '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">LEVEL 1: WASPADA</span>';
+        } else {
+          badgeLevel = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">LEVEL 0: AMAN</span>';
+        }
+
+        const flameText = item.flame === 1 ? '<span class="text-rose-400 font-bold">API AKTIF</span>' : '<span class="text-slate-400">Padam</span>';
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition';
+        tr.innerHTML = `
+          <td class="px-4 py-2.5 text-slate-300">${item.time}</td>
+          <td class="px-4 py-2.5 text-slate-400">${item.node}</td>
+          <td class="px-4 py-2.5">${badgeLevel}</td>
+          <td class="px-4 py-2.5 text-rose-300">${item.temp}°C</td>
+          <td class="px-4 py-2.5 text-amber-300">${item.gasAO}</td>
+          <td class="px-4 py-2.5">${flameText}</td>
+          <td class="px-4 py-2.5 text-slate-400">${item.rssi} dBm</td>
+          <td class="px-4 py-2.5 text-right text-slate-400 text-[11px]">${item.note || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function clearLogsTable() {
+      logRecords = [];
+      renderLogsTable();
+    }
+
+    function exportLogsToCSV() {
+      if (logRecords.length === 0) {
+        alert('Tidak ada log untuk diekspor!');
+        return;
+      }
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Waktu,Node,Level,Suhu(C),Gas(AO),Flame,RSSI(dBm),Catatan\n";
+      logRecords.forEach(r => {
+        csvContent += `"${r.time}","${r.node}","${r.level}","${r.temp}","${r.gasAO}","${r.flame}","${r.rssi}","${r.note}"\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `FireGuard_Logs_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // ==========================================
+    // 7. WEB AUDIO SYNTHESIZER (ALARM BROWSER)
+    // ==========================================
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function toggleAudioAlarm() {
+      isAudioAlarmEnabled = !isAudioAlarmEnabled;
+      const icon = document.getElementById('alarmIcon');
+      const text = document.getElementById('alarmText');
+      if (isAudioAlarmEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-emerald-400';
+        text.textContent = 'Sirine Aktif';
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+        text.textContent = 'Sirine Mute';
+        stopAlarmSound();
+      }
+    }
+
+    function playAlarmAudio(trigger) {
+      if (!isAudioAlarmEnabled) return;
+      initAudio();
+
+      if (trigger && !isAlarmSounding) {
+        try {
+          isAlarmSounding = true;
+          startOscillatorAlarm();
+        } catch (e) {
+          console.warn('Audio autoplay blocked by browser policy until user interaction');
+        }
+      } else if (!trigger && isAlarmSounding) {
+        stopAlarmSound();
+      }
+    }
+
+    function startOscillatorAlarm() {
+      if (!audioContext || audioContext.state === 'suspended') return;
+      alarmOscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      alarmOscillator.type = 'sawtooth';
+      // Frekuensi sirine naik turun 1200Hz - 2400Hz
+      alarmOscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
+      alarmOscillator.frequency.linearRampToValueAtTime(2400, audioContext.currentTime + 0.3);
+      alarmOscillator.frequency.linearRampToValueAtTime(1200, audioContext.currentTime + 0.6);
+
+      gainNode.gain.setValueAtTime(0.15, audioContext.currentTime); // Volume sedang aman
+      alarmOscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      alarmOscillator.start();
+      alarmOscillator.stop(audioContext.currentTime + 0.6);
+      
+      alarmOscillator.onended = () => {
+        isAlarmSounding = false;
+        if (currentData.level === 2 && isAudioAlarmEnabled) {
+          setTimeout(() => playAlarmAudio(true), 200);
+        }
+      };
+    }
+
+    function stopAlarmSound() {
+      isAlarmSounding = false;
+      if (alarmOscillator) {
+        try { alarmOscillator.stop(); } catch (e) {}
+        alarmOscillator = null;
+      }
+    }
+
+    // ==========================================
+    // 8. TEMPLATE KONEKSI FIREBASE (SIAP PAKAI)
+    // ==========================================
+    /*
+      Saat nanti ESP32 RX sudah mulai kirim data ke Firebase,
+      kamu cukup aktifkan modul Firebase ini:
+      
+      <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"><\/script>
+      <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"><\/script>
+      
+      const firebaseConfig = {
+        apiKey: "AIzaSy...",
+        databaseURL: "https://projek-fire-lora-default-rtdb.firebaseio.com",
+        projectId: "projek-fire-lora"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      
+      // Real-time listener:
+      db.ref('monitoring').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          currentData = { ...currentData, ...data };
+          pushChartData(new Date().toLocaleTimeString('id-ID'), data.temp, data.gasAO);
+          renderUI();
+          if (data.level > 0) addLogRecord('Update dari Firebase Gateway');
+        }
+      });
+    */
+  </script>
+</body>
+</html>
