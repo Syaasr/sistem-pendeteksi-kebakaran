@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FireGuard — LoRa Fire Monitoring</title>
-  
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -28,52 +29,60 @@
       }
     }
   </script>
-  
+
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  
+
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Firebase Compatibility SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-  
+
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
 
   <style>
     body {
       font-family: 'Inter', -apple-system, sans-serif;
       background-color: #0b0c0e;
     }
+
     ::-webkit-scrollbar {
       width: 5px;
       height: 5px;
     }
+
     ::-webkit-scrollbar-track {
       background: #0b0c0e;
     }
+
     ::-webkit-scrollbar-thumb {
       background: #232530;
       border-radius: 4px;
     }
+
     ::-webkit-scrollbar-thumb:hover {
       background: #323545;
     }
+
     .status-pulse-red {
       box-shadow: 0 0 20px -2px rgba(239, 68, 68, 0.4);
     }
   </style>
 </head>
+
 <body class="text-zinc-200 min-h-screen flex flex-col antialiased selection:bg-zinc-800 selection:text-white">
 
   <!-- TOP MINIMAL HEADER -->
   <header class="border-b border-surface-border/70 bg-[#0b0c0e]/90 backdrop-blur sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-      
+
       <!-- Logo Minimal -->
       <div class="flex items-center gap-2.5">
         <div class="w-2 h-2 rounded-full bg-rose-500"></div>
@@ -85,7 +94,8 @@
       <!-- Center Status: LoRa & Firebase Live Badges -->
       <div class="hidden sm:flex items-center gap-2.5">
         <!-- Firebase Live Badge -->
-        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-surface-border text-xs">
+        <div
+          class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-surface-border text-xs">
           <span class="relative flex h-1.5 w-1.5">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
@@ -95,7 +105,8 @@
         </div>
 
         <!-- LoRa Link Badge -->
-        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-surface-border text-xs">
+        <div
+          class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-surface-border text-xs">
           <span class="relative flex h-1.5 w-1.5">
             <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
           </span>
@@ -104,9 +115,17 @@
         </div>
       </div>
 
-      <!-- Right Actions: Audio Alarm & Time -->
-      <div class="flex items-center gap-3">
-        <button id="btnAlarmMute" onclick="toggleAudioAlarm()" class="px-2.5 py-1 rounded-md text-xs text-zinc-400 hover:text-white hover:bg-surface-subtle transition border border-transparent hover:border-surface-border flex items-center gap-1.5">
+      <!-- Right Actions: Table Viewer, Audio Alarm & Time -->
+      <div class="flex items-center gap-2.5">
+        <a href="../database/table-viewer.html"
+          class="px-2.5 py-1 rounded-md text-xs text-zinc-400 hover:text-white hover:bg-surface-subtle transition border border-transparent hover:border-surface-border flex items-center gap-1.5"
+          title="Lihat Database Tabel">
+          <i class="fa-solid fa-table-cells text-sky-400 text-[11px]"></i>
+          <span class="text-[11px] hidden sm:inline">Tabel Database</span>
+        </a>
+        <div class="h-3.5 w-[1px] bg-surface-border"></div>
+        <button id="btnAlarmMute" onclick="toggleAudioAlarm()"
+          class="px-2.5 py-1 rounded-md text-xs text-zinc-400 hover:text-white hover:bg-surface-subtle transition border border-transparent hover:border-surface-border flex items-center gap-1.5">
           <i class="fa-solid fa-volume-high text-zinc-400 text-[11px]" id="alarmIcon"></i>
           <span class="text-[11px]" id="alarmText">Sirine</span>
         </button>
@@ -124,19 +143,23 @@
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
         <span class="text-[11px] font-mono text-zinc-300" id="dataModeText">Sinkronisasi Cloud Firebase Aktif</span>
       </div>
-      
+
       <!-- Minimalist Segmented Buttons -->
       <div class="inline-flex p-0.5 rounded-lg bg-surface-subtle border border-surface-border/80 text-xs">
-        <button id="btnSimSafe" onclick="setSimulationPreset('safe')" class="px-2.5 py-1 rounded-md text-zinc-400 hover:text-emerald-400 transition text-[11px]">
+        <button id="btnSimSafe" onclick="setSimulationPreset('safe')"
+          class="px-2.5 py-1 rounded-md text-zinc-400 hover:text-emerald-400 transition text-[11px]">
           ● Aman
         </button>
-        <button id="btnSimWarn" onclick="setSimulationPreset('warning')" class="px-2.5 py-1 rounded-md text-zinc-400 hover:text-amber-400 transition text-[11px]">
+        <button id="btnSimWarn" onclick="setSimulationPreset('warning')"
+          class="px-2.5 py-1 rounded-md text-zinc-400 hover:text-amber-400 transition text-[11px]">
           ● Waspada
         </button>
-        <button id="btnSimDang" onclick="setSimulationPreset('danger')" class="px-2.5 py-1 rounded-md text-zinc-400 hover:text-rose-400 transition text-[11px]">
+        <button id="btnSimDang" onclick="setSimulationPreset('danger')"
+          class="px-2.5 py-1 rounded-md text-zinc-400 hover:text-rose-400 transition text-[11px]">
           ● Bahaya
         </button>
-        <button id="btnAutoSim" onclick="toggleAutoSim()" class="px-2.5 py-1 rounded-md text-zinc-400 hover:text-zinc-200 transition text-[11px] flex items-center gap-1">
+        <button id="btnAutoSim" onclick="toggleAutoSim()"
+          class="px-2.5 py-1 rounded-md text-zinc-400 hover:text-zinc-200 transition text-[11px] flex items-center gap-1">
           <i class="fa-solid fa-play text-[9px]" id="autoSimIcon"></i>
           <span id="autoSimText">Auto</span>
         </button>
@@ -148,22 +171,28 @@
   <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-6">
 
     <!-- MINIMAL STATUS BANNER -->
-    <div id="statusHeroCard" class="rounded-xl p-4 sm:p-5 bg-surface-card border border-surface-border transition-all duration-300">
+    <div id="statusHeroCard"
+      class="rounded-xl p-4 sm:p-5 bg-surface-card border border-surface-border transition-all duration-300">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        
+
         <div class="flex items-start sm:items-center gap-3.5">
           <div id="statusDotIndicator" class="w-3 h-3 rounded-full bg-emerald-500 mt-1 sm:mt-0 flex-shrink-0"></div>
           <div>
             <div class="flex items-center gap-2">
-              <h2 class="text-sm font-semibold text-white tracking-tight" id="statusMainTitle">Sistem Normal — Tidak Ada Indikasi Kebakaran</h2>
-              <span id="statusLevelBadge" class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/60">Level 0</span>
+              <h2 class="text-sm font-semibold text-white tracking-tight" id="statusMainTitle">Sistem Normal — Tidak Ada
+                Indikasi Kebakaran</h2>
+              <span id="statusLevelBadge"
+                class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/60">Level
+                0</span>
             </div>
-            <p class="text-xs text-zinc-400 mt-0.5" id="statusMainDesc">Seluruh sensor membaca dalam ambang batas normal.</p>
+            <p class="text-xs text-zinc-400 mt-0.5" id="statusMainDesc">Seluruh sensor membaca dalam ambang batas
+              normal.</p>
           </div>
         </div>
 
         <!-- Right Quick Info -->
-        <div class="flex items-center gap-4 text-xs font-mono pt-2 sm:pt-0 border-t sm:border-t-0 border-surface-border/60">
+        <div
+          class="flex items-center gap-4 text-xs font-mono pt-2 sm:pt-0 border-t sm:border-t-0 border-surface-border/60">
           <div>
             <span class="text-zinc-500 text-[11px]">Api:</span>
             <span class="text-emerald-400 font-semibold ml-1" id="heroFlameStatus">Padam</span>
@@ -198,7 +227,7 @@
         </div>
         <div class="mt-2.5 flex items-center justify-between text-[11px]">
           <span class="text-zinc-500" id="tempStatus">Normal (< 40°C)</span>
-          <span class="font-mono text-zinc-400" id="tempDiff">+0.2°</span>
+              <span class="font-mono text-zinc-400" id="tempDiff">+0.2°</span>
         </div>
         <div class="mt-2 w-full bg-zinc-800/80 rounded-full h-1 overflow-hidden">
           <div id="tempBar" class="bg-zinc-400 h-1 rounded-full transition-all duration-300" style="width: 35%"></div>
@@ -257,7 +286,8 @@
           <span class="font-mono text-zinc-400" id="valRssi">-72 dBm</span>
         </div>
         <div class="mt-2 w-full bg-zinc-800/80 rounded-full h-1 overflow-hidden">
-          <div id="flameBar" class="bg-emerald-500 h-1 rounded-full transition-all duration-300" style="width: 10%"></div>
+          <div id="flameBar" class="bg-emerald-500 h-1 rounded-full transition-all duration-300" style="width: 10%">
+          </div>
         </div>
       </div>
 
@@ -294,7 +324,7 @@
       <div class="bg-surface-card border border-surface-border rounded-xl p-4 sm:p-5 flex flex-col justify-between">
         <div>
           <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-3">Spesifikasi Sistem</h3>
-          
+
           <div class="space-y-2.5 text-xs">
             <div class="flex items-center justify-between py-1.5 border-b border-surface-border/60">
               <span class="text-zinc-500">Database</span>
@@ -319,7 +349,8 @@
           </div>
         </div>
 
-        <div class="mt-4 pt-3 border-t border-surface-border/60 flex items-center justify-between text-[11px] text-zinc-500">
+        <div
+          class="mt-4 pt-3 border-t border-surface-border/60 flex items-center justify-between text-[11px] text-zinc-500">
           <span>Status Sinkronisasi:</span>
           <span class="font-mono text-emerald-400" id="syncStatusText">Realtime Active</span>
         </div>
@@ -336,11 +367,13 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <button onclick="exportLogsToCSV()" class="px-2.5 py-1 rounded-md text-[11px] bg-surface-subtle hover:bg-zinc-800 text-zinc-300 border border-surface-border transition flex items-center gap-1.5">
+          <button onclick="exportLogsToCSV()"
+            class="px-2.5 py-1 rounded-md text-[11px] bg-surface-subtle hover:bg-zinc-800 text-zinc-300 border border-surface-border transition flex items-center gap-1.5">
             <i class="fa-solid fa-download text-[10px] text-zinc-400"></i>
             <span>Export CSV</span>
           </button>
-          <button onclick="clearLogsTable()" class="px-2 py-1 rounded-md text-[11px] text-zinc-500 hover:text-zinc-300 transition" title="Clear">
+          <button onclick="clearLogsTable()"
+            class="px-2 py-1 rounded-md text-[11px] text-zinc-500 hover:text-zinc-300 transition" title="Clear">
             <i class="fa-solid fa-trash-can text-[10px]"></i>
           </button>
         </div>
@@ -803,7 +836,7 @@
       });
       const link = document.createElement("a");
       link.setAttribute("href", encodeURI(csv));
-      link.setAttribute("download", `FireGuard_Log_${new Date().toISOString().slice(0,10)}.csv`);
+      link.setAttribute("download", `FireGuard_Log_${new Date().toISOString().slice(0, 10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -837,7 +870,7 @@
         try {
           isAlarmSounding = true;
           startOscillatorAlarm();
-        } catch (e) {}
+        } catch (e) { }
       } else if (!trigger && isAlarmSounding) {
         stopAlarmSound();
       }
@@ -864,10 +897,11 @@
     function stopAlarmSound() {
       isAlarmSounding = false;
       if (alarmOscillator) {
-        try { alarmOscillator.stop(); } catch (e) {}
+        try { alarmOscillator.stop(); } catch (e) { }
         alarmOscillator = null;
       }
     }
   </script>
 </body>
+
 </html>

@@ -30,3 +30,4 @@ Pastikan di Firebase Console -> **Realtime Database** -> Tab **Rules** berisi:
   Node data live terkini (di-overwrite oleh ESP32 RX setiap menerima paket LoRa).
 - **`https://sistem-pendeteksi-kebaka-bac09-default-rtdb.asia-southeast1.firebasedatabase.app/logs.json`**
   Node catatan riwayat kejadian/anomali.
+
