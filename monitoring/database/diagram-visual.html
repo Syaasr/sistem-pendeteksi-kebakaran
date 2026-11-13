@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagram Skema Database — FireGuard LoRa</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Mermaid.js for Official Diagram Rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#0e1015',
+        primaryColor: '#1e293b',
+        primaryTextColor: '#f8fafc',
+        primaryBorderColor: '#38bdf8',
+        lineColor: '#38bdf8',
+        secondaryColor: '#334155',
+        tertiaryColor: '#0f172a'
+      }
+    });
+  </script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0c0e;
+    }
+    .entity-shadow {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px -3px rgba(56, 189, 248, 0.15);
+    }
+    @media print {
+      body { background-color: white !important; color: black !important; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="text-zinc-200 min-h-screen flex flex-col p-4 sm:p-8">
+
+  <!-- TOP BAR / ACTIONS -->
+  <header class="max-w-6xl mx-auto w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-zinc-800 no-print">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-900/30">
+        <i class="fa-solid fa-database text-lg"></i>
+      </div>
+      <div>
+        <h1 class="text-base sm:text-lg font-bold text-white tracking-tight">Visual Database Schema & ERD</h1>
+        <p class="text-xs text-zinc-400">Firebase Realtime Database — Sistem Monitoring Kebakaran LoRa</p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2">
+      <button onclick="window.print()" class="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-xs text-white font-medium flex items-center gap-2 transition">
+        <i class="fa-solid fa-print text-zinc-400"></i>
+        <span>Cetak / Simpan PDF</span>
+      </button>
+      <a href="../web/index.html" class="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs text-white font-medium flex items-center gap-2 transition shadow-lg shadow-sky-900/40">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Kembali ke Web</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto w-full space-y-10 flex-1">
+
+    <!-- SECTION 1: VISUAL ERD INTERACTIVE CARDS (Sangat Jelas & Bagus untuk Screenshot Makalah) -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-sky-400 flex items-center gap-2">
+            <i class="fa-solid fa-table-cells"></i>
+            1. Diagram Skema Entitas Relasional (ERD)
+          </h2>
+          <p class="text-xs text-zinc-400 mt-0.5">Visualisasi entitas tabel, tipe data, dan relasi key di Firebase Realtime Database</p>
+        </div>
+        <span class="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">Format: JSON NoSQL Tree</span>
+      </div>
+
+      <!-- VISUAL CANVAS BOX -->
+      <div class="bg-[#0e1015] border border-zinc-800 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+        
+        <!-- Root Database Badge -->
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-900 border border-sky-500/50 text-xs font-mono text-sky-400 shadow-lg">
+            <i class="fa-solid fa-cloud text-amber-400"></i>
+            <span>Firebase Realtime Database (ROOT)</span>
+            <span class="text-zinc-500">/</span>
+            <span class="text-zinc-400 text-[11px]">asia-southeast1</span>
+          </div>
+        </div>
+
+        <!-- Two Main Tables / Nodes -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
+
+          <!-- ENTITY 1: /monitoring -->
+          <div class="bg-zinc-900/90 border-2 border-sky-500/60 rounded-2xl overflow-hidden entity-shadow flex flex-col">
+            <!-- Table Header -->
+            <div class="bg-gradient-to-r from-sky-950 to-zinc-900 px-4 py-3 border-b border-sky-500/40 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+                <span class="font-mono font-bold text-sm text-white">/monitoring</span>
+              </div>
+              <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                Live State (1:1)
+              </span>
+            </div>
+
+            <div class="p-4 text-xs text-zinc-400 bg-zinc-950/40 border-b border-zinc-800 text-[11px]">
+              Tabel penampung data live detik ini. Di-overwrite otomatis tiap kali ada paket LoRa baru masuk.
+            </div>
+
+            <!-- Fields List -->
+            <div class="divide-y divide-zinc-800/80 text-xs font-mono p-1">
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-zinc-200 font-semibold">nodeId</span>
+                <span class="text-zinc-400 text-[11px]">String ("TX-01")</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40 bg-zinc-850/20">
+                <span class="text-amber-400 font-semibold">level</span>
+                <span class="text-zinc-400 text-[11px]">Int (0=Aman, 1=Waspada, 2=Bahaya)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-rose-400 font-semibold">temp</span>
+                <span class="text-zinc-400 text-[11px]">Float (°C dari DHT22)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-sky-400 font-semibold">hum</span>
+                <span class="text-zinc-400 text-[11px]">Float (% RH dari DHT22)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-amber-300 font-semibold">gasAO</span>
+                <span class="text-zinc-400 text-[11px]">Int (0 - 4095 Analog ADC MQ-2)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-zinc-300 font-semibold">gas</span>
+                <span class="text-zinc-400 text-[11px]">Int (0: Low / 1: High Digital)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40 bg-rose-950/10">
+                <span class="text-rose-500 font-bold">flame</span>
+                <span class="text-zinc-400 text-[11px]">Int (0: Padam, 1: Api Aktif)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-zinc-300 font-semibold">flameAO</span>
+                <span class="text-zinc-400 text-[11px]">Int (0 - 4095 ADC Flame)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-emerald-400 font-semibold">rssi</span>
+                <span class="text-zinc-400 text-[11px]">Int (Kekuatan Sinyal dBm)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-zinc-400 font-semibold">lastUpdate</span>
+                <span class="text-zinc-400 text-[11px]">String ("16:45:10")</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ENTITY 2: /logs -->
+          <div class="bg-zinc-900/90 border-2 border-amber-500/60 rounded-2xl overflow-hidden entity-shadow flex flex-col">
+            <!-- Table Header -->
+            <div class="bg-gradient-to-r from-amber-950 to-zinc-900 px-4 py-3 border-b border-amber-500/40 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                <span class="font-mono font-bold text-sm text-white">/logs/{push_id}</span>
+              </div>
+              <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                Time-Series History (1:N)
+              </span>
+            </div>
+
+            <div class="p-4 text-xs text-zinc-400 bg-zinc-950/40 border-b border-zinc-800 text-[11px]">
+              Tabel riwayat anomali & kebakaran. Rekaman baru selalu ditambahkan (Append) dan tidak dihapus.
+            </div>
+
+            <!-- Fields List -->
+            <div class="divide-y divide-zinc-800/80 text-xs font-mono p-1">
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40 bg-amber-500/10">
+                <span class="text-amber-300 font-bold flex items-center gap-1.5">
+                  <i class="fa-solid fa-key text-[10px] text-amber-400"></i>
+                  log_id [PK]
+                </span>
+                <span class="text-zinc-400 text-[11px]">String (Unique Key Firebase)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-zinc-200 font-semibold">timestamp</span>
+                <span class="text-zinc-400 text-[11px]">String ("2026-11-13 16:50:00")</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-zinc-200 font-semibold">nodeId</span>
+                <span class="text-zinc-400 text-[11px]">String ("TX-01")</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-amber-400 font-semibold">level</span>
+                <span class="text-zinc-400 text-[11px]">Int (1=Waspada, 2=Bahaya)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-rose-400 font-semibold">temp</span>
+                <span class="text-zinc-400 text-[11px]">Float (°C saat kejadian)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-sky-400 font-semibold">hum</span>
+                <span class="text-zinc-400 text-[11px]">Float (% saat kejadian)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-amber-300 font-semibold">gasAO</span>
+                <span class="text-zinc-400 text-[11px]">Int (Kadar gas pemicu)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-rose-500 font-bold">flame</span>
+                <span class="text-zinc-400 text-[11px]">Int (Status api saat insiden)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-emerald-400 font-semibold">rssi</span>
+                <span class="text-zinc-400 text-[11px]">Int (Kekuatan Sinyal dBm)</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between hover:bg-zinc-800/40">
+                <span class="text-zinc-300 font-semibold">note</span>
+                <span class="text-zinc-400 text-[11px]">String ("Bahaya: Api Terdeteksi")</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Relationship Footer Note -->
+        <div class="mt-8 pt-4 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-400 gap-2">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-[2px] bg-sky-400"></span>
+            <span>Relasi: <b class="text-zinc-200">1 Realtime State</b> mentrigger <b class="text-zinc-200">N Records Riwayat</b> saat terjadi anomali level >= 1.</span>
+          </div>
+          <span class="text-[11px] font-mono text-zinc-500">Database Engine: Firebase Realtime DB</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 2: MERMAID STANDAR AKADEMIK (Bisa langsung di-copy teksnya untuk laporan) -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+            <i class="fa-solid fa-diagram-project"></i>
+            2. Diagram Relasional Format Akademik (Mermaid ERD)
+          </h2>
+          <p class="text-xs text-zinc-400 mt-0.5">Diagram standar notasi ERD rekayasa perangkat lunak</p>
+        </div>
+      </div>
+
+      <div class="bg-[#0e1015] border border-zinc-800 rounded-2xl p-6 overflow-x-auto flex justify-center">
+        <div class="mermaid text-center">
+erDiagram
+    ROOT_FIREBASE {
+        string database_url PK "firebaseio.com"
+        string project_id "sistem-pendeteksi-kebakar"
+    }
+
+    MONITORING_REALTIME {
+        string nodeId "Node Transmitter"
+        int level "0=Aman, 1=Waspada, 2=Bahaya"
+        float temp "Suhu Celcius (DHT22)"
+        float hum "Kelembaban RH (DHT22)"
+        int gasAO "Konsentrasi Gas (MQ-2)"
+        int flame "Status Nyala Api (Flame)"
+        int rssi "Kekuatan Radio LoRa"
+        string lastUpdate "Waktu Paket Terakhir"
+    }
+
+    LOGS_HISTORICAL {
+        string log_id PK "Auto Push Key"
+        string timestamp "Waktu Insiden"
+        string nodeId "Sumber Node"
+        int level "Status Bahaya"
+        float temp "Suhu Puncak"
+        int gasAO "Kadar Gas Asap"
+        int flame "Status Sensor Api"
+        int rssi "Kualitas Radio"
+        string note "Keterangan Kejadian"
+    }
+
+    ROOT_FIREBASE ||--|| MONITORING_REALTIME : "Menyimpan 1 Live Telemetri"
+    ROOT_FIREBASE ||--o{ LOGS_HISTORICAL : "Menyimpan Banyak Riwayat Log"
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: DATA FLOW ARCHITECTURE (Topologi Arsitektur) -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+            <i class="fa-solid fa-network-wired"></i>
+            3. Diagram Alur Data Sistem (Data Flow Diagram)
+          </h2>
+          <p class="text-xs text-zinc-400 mt-0.5">Alur data dari sensor fisik hingga tersimpan di database dan tampil di web</p>
+        </div>
+      </div>
+
+      <div class="bg-[#0e1015] border border-zinc-800 rounded-2xl p-6 overflow-x-auto flex justify-center">
+        <div class="mermaid text-center">
+flowchart LR
+    A["Node Sensor (TX)<br/>ESP32 + DHT22 + MQ2 + Flame"] -->|"Radio LoRa 433 MHz"| B["Gateway Receiver (RX)<br/>ESP32 + SX1278 + LCD"]
+    B -->|"Wi-Fi Internet (HTTPS)"| C[("Firebase Realtime DB<br/>/monitoring & /logs")]
+    C -->|"WebSocket Sync"| D["Web Dashboard Monitoring<br/>(Visual Real-Time)"]
+    C -->|"Historical Query"| E["Database Table Explorer<br/>(Tabel & Export CSV)"]
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="max-w-6xl mx-auto w-full mt-10 pt-4 border-t border-zinc-800 text-xs text-zinc-500 flex items-center justify-between no-print">
+    <span>Dokumentasi Visual Database — Projek WMC IoT LoRa</span>
+    <span class="font-mono text-zinc-600">Branch: Seno</span>
+  </footer>
+
+</body>
+</html>

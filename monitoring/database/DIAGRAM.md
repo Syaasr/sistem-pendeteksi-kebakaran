@@ -135,3 +135,4 @@ Tabel ini bertindak sebagai *time-series audit trail*. Setiap kali terjadi penin
    - Web browser tidak perlu melakukan polling (menembak server berulang-ulang), melainkan Firebase yang aktif mendorong perubahan (*push notification*) dalam hitungan milidetik.
 3. **Auditability (Pelaporan UAS/UTS)**:
    - Data pada node `/logs` dapat diekspor langsung ke format CSV/Excel melalui fitur yang sudah terpasang pada halaman Table Viewer.
+
