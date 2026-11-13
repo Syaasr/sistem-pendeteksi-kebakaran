@@ -34,6 +34,10 @@
   
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase Compatibility SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,7 +49,6 @@
       font-family: 'Inter', -apple-system, sans-serif;
       background-color: #0b0c0e;
     }
-    /* Thin subtle scrollbar */
     ::-webkit-scrollbar {
       width: 5px;
       height: 5px;
@@ -79,14 +82,26 @@
         <span class="text-xs text-zinc-400 font-mono">LoRa Node TX-01</span>
       </div>
 
-      <!-- Center Status Pill -->
-      <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-surface-border text-xs">
-        <span class="relative flex h-1.5 w-1.5">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-        </span>
-        <span class="text-zinc-400">SX1278 433 MHz:</span>
-        <span class="font-mono text-zinc-200 font-medium" id="headerRssi">-72 dBm</span>
+      <!-- Center Status: LoRa & Firebase Live Badges -->
+      <div class="hidden sm:flex items-center gap-2.5">
+        <!-- Firebase Live Badge -->
+        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-surface-border text-xs">
+          <span class="relative flex h-1.5 w-1.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
+          </span>
+          <span class="text-zinc-400">Firebase RTDB:</span>
+          <span class="font-mono text-sky-400 font-medium" id="headerFirebaseStatus">Syncing...</span>
+        </div>
+
+        <!-- LoRa Link Badge -->
+        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-surface-border text-xs">
+          <span class="relative flex h-1.5 w-1.5">
+            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+          </span>
+          <span class="text-zinc-400">LoRa:</span>
+          <span class="font-mono text-zinc-200 font-medium" id="headerRssi">-72 dBm</span>
+        </div>
       </div>
 
       <!-- Right Actions: Audio Alarm & Time -->
@@ -102,16 +117,17 @@
     </div>
   </header>
 
-  <!-- MINIMAL COMPACT SIMULATION TOOLBAR -->
+  <!-- MINIMAL COMPACT SIMULATION / MANUAL OVERRIDE TOOLBAR -->
   <section class="border-b border-surface-border/40 bg-surface/40 py-2 px-4">
     <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
-      <div class="flex items-center gap-2 text-zinc-500">
-        <span class="text-[11px] uppercase tracking-wider font-semibold text-zinc-400">Simulasi:</span>
+      <div class="flex items-center gap-2 text-zinc-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <span class="text-[11px] font-mono text-zinc-300" id="dataModeText">Sinkronisasi Cloud Firebase Aktif</span>
       </div>
       
       <!-- Minimalist Segmented Buttons -->
       <div class="inline-flex p-0.5 rounded-lg bg-surface-subtle border border-surface-border/80 text-xs">
-        <button id="btnSimSafe" onclick="setSimulationPreset('safe')" class="px-2.5 py-1 rounded-md text-emerald-400 bg-surface border border-surface-border/60 font-medium transition text-[11px]">
+        <button id="btnSimSafe" onclick="setSimulationPreset('safe')" class="px-2.5 py-1 rounded-md text-zinc-400 hover:text-emerald-400 transition text-[11px]">
           ● Aman
         </button>
         <button id="btnSimWarn" onclick="setSimulationPreset('warning')" class="px-2.5 py-1 rounded-md text-zinc-400 hover:text-amber-400 transition text-[11px]">
@@ -281,6 +297,10 @@
           
           <div class="space-y-2.5 text-xs">
             <div class="flex items-center justify-between py-1.5 border-b border-surface-border/60">
+              <span class="text-zinc-500">Database</span>
+              <span class="font-mono text-sky-400">Firebase Realtime DB</span>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-surface-border/60">
               <span class="text-zinc-500">Transmitter</span>
               <span class="font-mono text-zinc-300">ESP32 + SX1278</span>
             </div>
@@ -292,10 +312,6 @@
               <span class="text-zinc-500">Frekuensi LoRa</span>
               <span class="font-mono text-zinc-300">433.0 MHz (Sync 0xF3)</span>
             </div>
-            <div class="flex items-center justify-between py-1.5 border-b border-surface-border/60">
-              <span class="text-zinc-500">Database</span>
-              <span class="font-mono text-zinc-300">Firebase Realtime DB</span>
-            </div>
             <div class="flex items-center justify-between py-1.5">
               <span class="text-zinc-500">Timeout Link</span>
               <span class="font-mono text-zinc-300">5000 ms</span>
@@ -304,8 +320,8 @@
         </div>
 
         <div class="mt-4 pt-3 border-t border-surface-border/60 flex items-center justify-between text-[11px] text-zinc-500">
-          <span>Latensi Data:</span>
-          <span class="font-mono text-emerald-400">~150-200 ms</span>
+          <span>Status Sinkronisasi:</span>
+          <span class="font-mono text-emerald-400" id="syncStatusText">Realtime Active</span>
         </div>
       </div>
 
@@ -316,7 +332,7 @@
       <div class="flex items-center justify-between mb-3">
         <div>
           <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-300">Log Aktivitas & Riwayat</h3>
-          <p class="text-[11px] text-zinc-500 mt-0.5">Catatan kejadian sensor dan perubahan level bahaya</p>
+          <p class="text-[11px] text-zinc-500 mt-0.5">Catatan kejadian sensor dan riwayat bahaya tersimpan di Cloud</p>
         </div>
 
         <div class="flex items-center gap-2">
@@ -361,9 +377,26 @@
     </div>
   </footer>
 
-  <!-- JAVASCRIPT LOGIC -->
+  <!-- JAVASCRIPT LOGIC & FIREBASE INTEGRATION -->
   <script>
-    // State
+    // ==========================================
+    // 1. FIREBASE CONFIGURATION & INITIALIZATION
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4E7rUmDn4JjzTkGIugt00ngWolYF_vX4",
+      authDomain: "sistem-pendeteksi-kebaka-bac09.firebaseapp.com",
+      databaseURL: "https://sistem-pendeteksi-kebaka-bac09-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "sistem-pendeteksi-kebaka-bac09",
+      storageBucket: "sistem-pendeteksi-kebaka-bac09.firebasestorage.app",
+      messagingSenderId: "451499600424",
+      appId: "1:451499600424:web:3e22c8ebd1ba358f4ae31d",
+      measurementId: "G-CEQQJ5V16F"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // System state
     let currentData = {
       level: 0,
       flame: 0,
@@ -373,7 +406,7 @@
       temp: 29.4,
       hum: 62.0,
       rssi: -72,
-      timestamp: new Date()
+      lastUpdate: 'Menunggu data...'
     };
 
     let isAudioAlarmEnabled = true;
@@ -390,31 +423,83 @@
     let chartGasData = [];
     let fireChart = null;
 
-    let logRecords = [
-      { time: '17:40:12', level: 0, temp: 29.1, gasAO: 185, flame: 0, rssi: -74, note: 'Inisialisasi sistem LoRa' },
-      { time: '17:42:05', level: 0, temp: 29.4, gasAO: 195, flame: 0, rssi: -72, note: 'Koneksi telemetri stabil' }
-    ];
+    let logRecords = [];
 
+    // ==========================================
+    // 2. LIFECYCLE & EVENT LISTENERS
+    // ==========================================
     window.addEventListener('DOMContentLoaded', () => {
       initChart();
       updateClock();
       setInterval(updateClock, 1000);
       renderUI();
-      renderLogsTable();
 
-      // Seed chart initial history
-      for (let i = 8; i >= 0; i--) {
-        const d = new Date(Date.now() - i * 3000);
-        const timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        pushChartData(timeStr, 29 + Math.random() * 0.8, 185 + Math.random() * 20);
-      }
+      // Listen to Firebase Realtime Database
+      initFirebaseListener();
     });
 
     function updateClock() {
       document.getElementById('liveClock').textContent = new Date().toLocaleTimeString('id-ID');
     }
 
-    // Chart with Minimalist Styling
+    // ==========================================
+    // 3. FIREBASE REALTIME LISTENER
+    // ==========================================
+    function initFirebaseListener() {
+      const statusBadge = document.getElementById('headerFirebaseStatus');
+      const dataModeText = document.getElementById('dataModeText');
+
+      // 1. Check Realtime Database Connection
+      db.ref('.info/connected').on('value', (snap) => {
+        if (snap.val() === true) {
+          statusBadge.textContent = 'Connected (Live)';
+          statusBadge.className = 'font-mono text-emerald-400 font-medium';
+        } else {
+          statusBadge.textContent = 'Disconnected';
+          statusBadge.className = 'font-mono text-zinc-500 font-medium';
+        }
+      });
+
+      // 2. Listen to '/monitoring' for current live readings
+      db.ref('monitoring').on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          currentData = {
+            level: Number(val.level || 0),
+            flame: Number(val.flame || 0),
+            gas: Number(val.gas || 0),
+            gasAO: Number(val.gasAO || 0),
+            flameAO: Number(val.flameAO || 4095),
+            temp: Number(val.temp || 0),
+            hum: Number(val.hum || 0),
+            rssi: Number(val.rssi || -70),
+            lastUpdate: val.lastUpdate || new Date().toLocaleTimeString('id-ID')
+          };
+
+          const timeLabel = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          pushChartData(timeLabel, currentData.temp, currentData.gasAO);
+          renderUI();
+          dataModeText.textContent = `Sinkronisasi Firebase Aktif — Terakhir: ${currentData.lastUpdate}`;
+        }
+      }, (error) => {
+        console.error('Firebase read error:', error);
+        statusBadge.textContent = 'Error (Cek Rules)';
+        statusBadge.className = 'font-mono text-rose-400 font-medium';
+      });
+
+      // 3. Listen to '/logs' for historical detection records
+      db.ref('logs').limitToLast(20).on('value', (snapshot) => {
+        const logsObj = snapshot.val();
+        if (logsObj) {
+          logRecords = Object.values(logsObj).reverse();
+          renderLogsTable();
+        }
+      });
+    }
+
+    // ==========================================
+    // 4. CHART SETUP (Chart.js)
+    // ==========================================
     function initChart() {
       const ctx = document.getElementById('fireTrendChart').getContext('2d');
       fireChart = new Chart(ctx, {
@@ -497,19 +582,22 @@
       if (fireChart) fireChart.update();
     }
 
-    // Minimal UI Render
+    // ==========================================
+    // 5. UI RENDER ENGINE
+    // ==========================================
     function renderUI() {
-      document.getElementById('valTemp').textContent = currentData.temp.toFixed(1);
-      document.getElementById('valHum').textContent = currentData.hum.toFixed(1);
+      document.getElementById('valTemp').textContent = Number(currentData.temp).toFixed(1);
+      document.getElementById('valHum').textContent = Number(currentData.hum).toFixed(1);
       document.getElementById('valGasAO').textContent = Math.round(currentData.gasAO);
       document.getElementById('valFlameAO').textContent = Math.round(currentData.flameAO);
       document.getElementById('valRssi').textContent = currentData.rssi + ' dBm';
       document.getElementById('headerRssi').textContent = currentData.rssi + ' dBm';
+      document.getElementById('lastPacketTime').textContent = currentData.lastUpdate || 'baru saja';
 
       // Digital gas
       document.getElementById('valGasDigital').textContent = currentData.gas === 1 ? 'Pin: HIGH (Bocor)' : 'Pin: LOW (Aman)';
 
-      // Bar widths
+      // Progress bar widths
       const tempPercent = Math.min(Math.max(((currentData.temp - 20) / (70 - 20)) * 100, 5), 100);
       document.getElementById('tempBar').style.width = tempPercent + '%';
 
@@ -549,7 +637,6 @@
       const buzzer = document.getElementById('heroBuzzerStatus');
 
       if (currentData.level === 2) {
-        // DANGER (Minimalist Red)
         heroCard.className = 'rounded-xl p-4 sm:p-5 bg-rose-950/20 border border-rose-500/70 status-pulse-red transition-all duration-300';
         dot.className = 'w-3 h-3 rounded-full bg-rose-500 animate-ping mt-1 sm:mt-0 flex-shrink-0';
         title.textContent = 'Bahaya Kebakaran Terdeteksi!';
@@ -562,7 +649,6 @@
         playAlarmAudio(true);
 
       } else if (currentData.level === 1) {
-        // WARNING (Minimalist Amber)
         heroCard.className = 'rounded-xl p-4 sm:p-5 bg-amber-950/20 border border-amber-500/60 transition-all duration-300';
         dot.className = 'w-3 h-3 rounded-full bg-amber-400 mt-1 sm:mt-0 flex-shrink-0';
         title.textContent = 'Peringatan: Peningkatan Suhu / Gas';
@@ -575,7 +661,6 @@
         playAlarmAudio(false);
 
       } else {
-        // SAFE (Minimalist Calm)
         heroCard.className = 'rounded-xl p-4 sm:p-5 bg-surface-card border border-surface-border transition-all duration-300';
         dot.className = 'w-3 h-3 rounded-full bg-emerald-500 mt-1 sm:mt-0 flex-shrink-0';
         title.textContent = 'Sistem Normal — Tidak Ada Indikasi Kebakaran';
@@ -589,21 +674,13 @@
       }
     }
 
-    // Segmented Simulation Presets
+    // ==========================================
+    // 6. SIMULATION / LOCAL OVERRIDE (Optional)
+    // ==========================================
     function setSimulationPreset(mode) {
       const nowTime = new Date().toLocaleTimeString('id-ID');
 
-      // Update segment button active styles
-      const bSafe = document.getElementById('btnSimSafe');
-      const bWarn = document.getElementById('btnSimWarn');
-      const bDang = document.getElementById('btnSimDang');
-
-      bSafe.className = 'px-2.5 py-1 rounded-md text-zinc-400 hover:text-zinc-200 transition text-[11px]';
-      bWarn.className = 'px-2.5 py-1 rounded-md text-zinc-400 hover:text-zinc-200 transition text-[11px]';
-      bDang.className = 'px-2.5 py-1 rounded-md text-zinc-400 hover:text-zinc-200 transition text-[11px]';
-
       if (mode === 'safe') {
-        bSafe.className = 'px-2.5 py-1 rounded-md text-emerald-400 bg-surface border border-surface-border/60 font-medium transition text-[11px]';
         currentData.level = 0;
         currentData.flame = 0;
         currentData.gas = 0;
@@ -612,9 +689,8 @@
         currentData.temp = 28.8 + Math.random() * 1;
         currentData.hum = 61 + Math.random() * 3;
         currentData.rssi = -70 - Math.floor(Math.random() * 5);
-        addLogRecord('Kondisi kembali normal (Aman)');
+        currentData.lastUpdate = nowTime;
       } else if (mode === 'warning') {
-        bWarn.className = 'px-2.5 py-1 rounded-md text-amber-300 bg-surface border border-surface-border/60 font-medium transition text-[11px]';
         currentData.level = 1;
         currentData.flame = 0;
         currentData.gas = 1;
@@ -623,9 +699,8 @@
         currentData.temp = 38.5 + Math.random() * 2;
         currentData.hum = 48;
         currentData.rssi = -74;
-        addLogRecord('Waspada: Peningkatan kadar asap MQ-2');
+        currentData.lastUpdate = nowTime;
       } else if (mode === 'danger') {
-        bDang.className = 'px-2.5 py-1 rounded-md text-rose-400 bg-surface border border-surface-border/60 font-medium transition text-[11px]';
         currentData.level = 2;
         currentData.flame = 1;
         currentData.gas = 1;
@@ -634,7 +709,7 @@
         currentData.temp = 58.2 + Math.random() * 5;
         currentData.hum = 34;
         currentData.rssi = -78;
-        addLogRecord('BAHAYA: Api terdeteksi pada sensor');
+        currentData.lastUpdate = nowTime;
       }
 
       pushChartData(nowTime, currentData.temp, currentData.gasAO);
@@ -662,6 +737,7 @@
             currentData.temp += (Math.random() - 0.3) * 0.5;
             currentData.gasAO += (Math.random() - 0.3) * 12;
           }
+          currentData.lastUpdate = nowTime;
           pushChartData(nowTime, currentData.temp, currentData.gasAO);
           renderUI();
         }, 2000);
@@ -674,24 +750,17 @@
       }
     }
 
-    // Logs & Table
-    function addLogRecord(note) {
-      logRecords.unshift({
-        time: new Date().toLocaleTimeString('id-ID'),
-        level: currentData.level,
-        temp: currentData.temp.toFixed(1),
-        gasAO: Math.round(currentData.gasAO),
-        flame: currentData.flame,
-        rssi: currentData.rssi,
-        note: note
-      });
-      if (logRecords.length > 20) logRecords.pop();
-      renderLogsTable();
-    }
-
+    // ==========================================
+    // 7. AUDIT LOGS TABLE
+    // ==========================================
     function renderLogsTable() {
       const tbody = document.getElementById('logsTableBody');
       tbody.innerHTML = '';
+
+      if (logRecords.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-zinc-500">Belum ada catatan log riwayat kebakaran tersimpan di Firebase.</td></tr>';
+        return;
+      }
 
       logRecords.forEach((item) => {
         let badge = '';
@@ -708,28 +777,29 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-surface-subtle/50 transition';
         tr.innerHTML = `
-          <td class="py-2 px-3 text-zinc-400 font-mono">${item.time}</td>
+          <td class="py-2 px-3 text-zinc-400 font-mono">${item.timestamp || item.time || '-'}</td>
           <td class="py-2 px-3">${badge}</td>
           <td class="py-2 px-3 font-mono text-zinc-300">${item.temp}°C</td>
           <td class="py-2 px-3 font-mono text-zinc-300">${item.gasAO}</td>
           <td class="py-2 px-3">${flameText}</td>
           <td class="py-2 px-3 font-mono text-zinc-500">${item.rssi} dBm</td>
-          <td class="py-2 px-3 text-right text-zinc-500">${item.note}</td>
+          <td class="py-2 px-3 text-right text-zinc-500">${item.note || '-'}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
     function clearLogsTable() {
-      logRecords = [];
-      renderLogsTable();
+      if (confirm('Hapus seluruh riwayat logs di Firebase?')) {
+        db.ref('logs').remove();
+      }
     }
 
     function exportLogsToCSV() {
       if (logRecords.length === 0) return alert('Tidak ada log untuk diekspor!');
       let csv = "data:text/csv;charset=utf-8,Waktu,Status,Suhu(C),Gas(AO),Flame,RSSI,Keterangan\n";
       logRecords.forEach(r => {
-        csv += `"${r.time}","${r.level}","${r.temp}","${r.gasAO}","${r.flame}","${r.rssi}","${r.note}"\n`;
+        csv += `"${r.timestamp || r.time}","${r.level}","${r.temp}","${r.gasAO}","${r.flame}","${r.rssi}","${r.note || ''}"\n`;
       });
       const link = document.createElement("a");
       link.setAttribute("href", encodeURI(csv));
@@ -739,7 +809,9 @@
       document.body.removeChild(link);
     }
 
-    // Audio alarm
+    // ==========================================
+    // 8. AUDIO ALARM SYNTHESIZER
+    // ==========================================
     function initAudio() {
       if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
