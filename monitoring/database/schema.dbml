@@ -1,0 +1,42 @@
+// ====================================================
+// Database: FireGuard LoRa - Sistem Pendeteksi Kebakaran
+// Tool: dbdiagram.io (DBML - Database Markup Language)
+// ====================================================
+
+Table nodes {
+  id varchar [pk, note: 'ID Node Transmitter, contoh: TX-01']
+  nama_lokasi varchar [note: 'Lokasi penempatan sensor, misal: Lab WMC']
+  tipe_mcu varchar [note: 'Mikrokontroler, misal: ESP32 DOIT DevKit']
+  modul_radio varchar [note: 'Modul LoRa SX1278 (433 MHz)']
+  status varchar [note: 'Status koneksi: Online / Offline']
+}
+
+Table monitoring {
+  node_id varchar [pk, note: 'ID Node Sensor (One-to-One dengan nodes)']
+  level int [note: 'Tingkat Bahaya: 0 = Aman, 1 = Waspada, 2 = Bahaya']
+  temp float [note: 'Suhu lingkungan (°C) dari sensor DHT22']
+  hum float [note: 'Kelembaban relatif udara (%) dari DHT22']
+  gas int [note: 'Status digital MQ-2 (0 = Low / 1 = High Gas)']
+  gasAO int [note: 'Nilai analog ADC MQ-2 (rentang 0 - 4095)']
+  flame int [note: 'Status sensor api (0 = Padam, 1 = Ada Api)']
+  flameAO int [note: 'Nilai intensitas radiasi api ADC (0 - 4095)']
+  rssi int [note: 'Kekuatan sinyal transmisi LoRa (dBm)']
+  last_update timestamp [note: 'Waktu paket data terakhir diterima']
+}
+
+Table logs {
+  id varchar [pk, note: 'Primary Key / Push ID unik dari Firebase']
+  node_id varchar [note: 'ID Node sumber pemicu anomali']
+  level int [note: 'Level bahaya saat insiden (1 = Waspada, 2 = Bahaya)']
+  temp float [note: 'Nilai suhu saat insiden kebakaran terjadi (°C)']
+  hum float [note: 'Nilai kelembaban udara saat insiden (%)']
+  gasAO int [note: 'Kadar gas analog MQ-2 saat insiden']
+  flame int [note: 'Status sensor api saat insiden (0/1)']
+  rssi int [note: 'Kualitas sinyal LoRa saat kejadian (dBm)']
+  note varchar [note: 'Catatan ringkas, contoh: Api Terdeteksi!']
+  created_at timestamp [note: 'Waktu kejadian insiden dicatat']
+}
+
+// Relasi Antar Tabel (Entity Relationships)
+Ref: monitoring.node_id - nodes.id // 1 Node memiliki 1 data live monitoring
+Ref: logs.node_id > nodes.id       // 1 Node dapat memiliki banyak catatan log riwayat
