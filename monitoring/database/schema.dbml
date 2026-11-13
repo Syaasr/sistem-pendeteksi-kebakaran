@@ -1,42 +1,51 @@
-// ====================================================
-// Database: FireGuard LoRa - Sistem Pendeteksi Kebakaran
-// Tool: dbdiagram.io (DBML - Database Markup Language)
-// ====================================================
+// ==========================================================
+// Database: Sistem Pendeteksi Kebakaran Berbasis LoRa (WMC)
+// Disesuaikan 1:1 dengan struct SensorPacket & variable.h C++
+// ==========================================================
 
-Table nodes {
-  id varchar [pk, note: 'ID Node Transmitter, contoh: TX-01']
-  nama_lokasi varchar [note: 'Lokasi penempatan sensor, misal: Lab WMC']
-  tipe_mcu varchar [note: 'Mikrokontroler, misal: ESP32 DOIT DevKit']
-  modul_radio varchar [note: 'Modul LoRa SX1278 (433 MHz)']
-  status varchar [note: 'Status koneksi: Online / Offline']
+// 1. DATA PERANGKAT & PARAMETER RADIO LORA (variable.h)
+Table perangkat_lora {
+  id varchar [pk, note: 'Kode unik node: TX-01 atau RX-GATEWAY']
+  peran varchar [note: 'TRANSMITTER atau RECEIVER']
+  lora_freq float [default: 433.0, note: 'LORA_FREQ: 433E6 (433.0 MHz)']
+  lora_sync varchar [default: '0xF3', note: 'LORA_SYNC: 0xF3']
+  link_timeout_ms int [default: 5000, note: 'LINK_TIMEOUT_MS: 5000 ms (5 detik)']
 }
 
-Table monitoring {
-  node_id varchar [pk, note: 'ID Node Sensor (One-to-One dengan nodes)']
-  level int [note: 'Tingkat Bahaya: 0 = Aman, 1 = Waspada, 2 = Bahaya']
-  temp float [note: 'Suhu lingkungan (°C) dari sensor DHT22']
-  hum float [note: 'Kelembaban relatif udara (%) dari DHT22']
-  gas int [note: 'Status digital MQ-2 (0 = Low / 1 = High Gas)']
-  gasAO int [note: 'Nilai analog ADC MQ-2 (rentang 0 - 4095)']
-  flame int [note: 'Status sensor api (0 = Padam, 1 = Ada Api)']
-  flameAO int [note: 'Nilai intensitas radiasi api ADC (0 - 4095)']
-  rssi int [note: 'Kekuatan sinyal transmisi LoRa (dBm)']
-  last_update timestamp [note: 'Waktu paket data terakhir diterima']
+// 2. DATA TELEMETRI SENSOR (struct SensorPacket)
+Table sensor_packet {
+  node_id varchar [pk, ref: - perangkat_lora.id]
+  level int [note: 'uint8_t level: 0 = AMAN, 1 = WASPADA, 2 = BAHAYA']
+  flame boolean [note: 'bool flame: Digital sensor api']
+  gas boolean [note: 'bool gas: Digital sensor gas MQ-2']
+  dhtOk boolean [note: 'bool dhtOk: Status kesiapan sensor DHT22']
+  flameAO int [note: 'uint16_t flameAO: Nilai analog ADC sensor api']
+  gasAO int [note: 'uint16_t gasAO: Nilai analog ADC sensor gas MQ-2']
+  temp float [note: 'float temp: Suhu lingkungan (°C) dari DHT22']
+  hum float [note: 'float hum: Kelembaban udara (%) dari DHT22']
+  rssi int [note: 'int rssi: Kekuatan sinyal radio LoRa (dBm)']
+  last_received timestamp [note: 'Waktu penerimaan paket di ESP32 RX']
 }
 
-Table logs {
-  id varchar [pk, note: 'Primary Key / Push ID unik dari Firebase']
-  node_id varchar [note: 'ID Node sumber pemicu anomali']
-  level int [note: 'Level bahaya saat insiden (1 = Waspada, 2 = Bahaya)']
-  temp float [note: 'Nilai suhu saat insiden kebakaran terjadi (°C)']
-  hum float [note: 'Nilai kelembaban udara saat insiden (%)']
-  gasAO int [note: 'Kadar gas analog MQ-2 saat insiden']
-  flame int [note: 'Status sensor api saat insiden (0/1)']
-  rssi int [note: 'Kualitas sinyal LoRa saat kejadian (dBm)']
-  note varchar [note: 'Catatan ringkas, contoh: Api Terdeteksi!']
-  created_at timestamp [note: 'Waktu kejadian insiden dicatat']
+// 3. MONITORING KUALITAS LINK NIRKABEL (Evaluasi WMC)
+Table link_lora_status {
+  id int [pk, increment]
+  node_id varchar [ref: > perangkat_lora.id]
+  rssi int [note: 'Nilai RSSI (dBm)']
+  link_ok boolean [note: 'bool linkOk: true jika terhubung, false jika timeout > 5s']
+  status_display varchar [note: 'Tampilan LCD: "Menunggu data" / "Link putus, Cek TX"']
+  timestamp timestamp
 }
 
-// Relasi Antar Tabel (Entity Relationships)
-Ref: monitoring.node_id - nodes.id // 1 Node memiliki 1 data live monitoring
-Ref: logs.node_id > nodes.id       // 1 Node dapat memiliki banyak catatan log riwayat
+// 4. RIWAYAT DETEKSI BAHAYA (Logs Insiden Kebakaran)
+Table riwayat_kebakaran {
+  id varchar [pk, note: 'Unique Push Key Firebase']
+  node_id varchar [ref: > perangkat_lora.id]
+  level int [note: '1 = WASPADA, 2 = BAHAYA']
+  temp float [note: 'Suhu puncak saat kejadian (°C)']
+  gasAO int [note: 'Kadar gas AO tertinggi saat kejadian']
+  flame boolean [note: 'Kondisi sensor api saat insiden']
+  buzzer_mode varchar [note: 'BUZZER_FREQ_ALARM (2700Hz) / BUZZER_FREQ_WARN (2000Hz)']
+  keterangan varchar [note: 'Catatan ringkas kejadian']
+  timestamp timestamp
+}
