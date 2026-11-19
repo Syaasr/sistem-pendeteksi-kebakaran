@@ -23,3 +23,11 @@
 #define BUZZER_FREQ_ALARM 2700   // Hz, sekitar resonansi buzzer pasif
 #define BUZZER_FREQ_WARN 2000
 #define BUZZER_FREQ_FAULT 1000
+
+// ===== KONEKSI WI-FI & CLOUD FIREBASE (IoT Gateway) =====
+// Temanmu cukup mengganti nama & password hotspot HP di bawah ini:
+#define WIFI_SSID       "Hotspot_HP"
+#define WIFI_PASSWORD   "12345678"
+
+// URL Firebase Realtime Database
+#define FIREBASE_HOST   "https://sistem-pendeteksi-kebaka-bac09-default-rtdb.asia-southeast1.firebasedatabase.app"
