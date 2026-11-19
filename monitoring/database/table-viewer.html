@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Database Table Viewer — FireGuard LoRa</title>
-  
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -28,35 +29,41 @@
       }
     }
   </script>
-  
+
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-  
+
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
 
   <style>
     body {
       font-family: 'Inter', sans-serif;
       background-color: #0b0c0e;
     }
+
     ::-webkit-scrollbar {
       width: 5px;
       height: 5px;
     }
+
     ::-webkit-scrollbar-track {
       background: #0b0c0e;
     }
+
     ::-webkit-scrollbar-thumb {
       background: #232530;
       border-radius: 4px;
     }
   </style>
 </head>
+
 <body class="text-zinc-200 min-h-screen flex flex-col antialiased">
 
   <!-- HEADER -->
@@ -72,14 +79,16 @@
           <i class="fa-solid fa-table-cells text-sky-400 text-sm"></i>
           <span class="font-semibold text-sm text-white">Database Table Explorer</span>
         </div>
-        <a href="diagram-visual.html" class="hidden md:flex px-2.5 py-1 rounded-md bg-surface-subtle hover:bg-zinc-800 text-xs text-sky-400 border border-surface-border items-center gap-1.5 transition ml-2">
-          <i class="fa-solid fa-diagram-project text-[11px]"></i>
-          <span>Diagram Visual</span>
+          <a href="diagram-visual.html"
+            class="hidden md:flex px-2.5 py-1 rounded-md bg-surface-subtle hover:bg-zinc-800 text-xs text-sky-400 border border-surface-border items-center gap-1.5 transition ml-2">
+            <i class="fa-solid fa-diagram-project text-[11px]"></i>
+        <span>Diagram Visual</span>
         </a>
       </div>
 
       <!-- Firebase Status Indicator -->
-      <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-surface-border text-xs">
+      <div
+        class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-surface-border text-xs">
         <span class="relative flex h-1.5 w-1.5">
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
@@ -92,7 +101,7 @@
 
   <!-- MAIN -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-5">
-    
+
     <!-- STATS SUMMARY CARDS -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div class="bg-surface-card border border-surface-border rounded-xl p-3.5">
@@ -114,17 +123,20 @@
     </div>
 
     <!-- TABLE CONTROLS (SEARCH, FILTER, EXPORT) -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface-card border border-surface-border rounded-xl p-3">
+    <div
+      class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface-card border border-surface-border rounded-xl p-3">
       <!-- Search -->
       <div class="relative flex-1 max-w-sm">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-zinc-500 text-xs"></i>
-        <input type="text" id="searchInput" oninput="filterTable()" placeholder="Cari tanggal, waktu, atau catatan..." class="w-full bg-surface-subtle border border-surface-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500 font-sans">
+        <input type="text" id="searchInput" oninput="filterTable()" placeholder="Cari tanggal, waktu, atau catatan..."
+          class="w-full bg-surface-subtle border border-surface-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500 font-sans">
       </div>
 
       <!-- Filters & Action Buttons -->
       <div class="flex items-center gap-2 flex-wrap">
         <!-- Filter Level -->
-        <select id="levelFilter" onchange="filterTable()" class="bg-surface-subtle border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-sky-500">
+        <select id="levelFilter" onchange="filterTable()"
+          class="bg-surface-subtle border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-sky-500">
           <option value="all">Semua Status</option>
           <option value="2">Level 2 (Bahaya)</option>
           <option value="1">Level 1 (Waspada)</option>
@@ -132,18 +144,23 @@
         </select>
 
         <!-- Export CSV Button -->
-        <button onclick="exportCSV()" class="px-3 py-1.5 rounded-lg bg-emerald-950/70 border border-emerald-700/60 text-emerald-300 hover:bg-emerald-800/60 transition text-xs flex items-center gap-1.5">
+        <button onclick="exportCSV()"
+          class="px-3 py-1.5 rounded-lg bg-emerald-950/70 border border-emerald-700/60 text-emerald-300 hover:bg-emerald-800/60 transition text-xs flex items-center gap-1.5">
           <i class="fa-solid fa-file-csv"></i>
           <span>Export Excel / CSV</span>
         </button>
 
         <!-- Refresh Button -->
-        <button onclick="loadDataFromFirebase()" class="px-3 py-1.5 rounded-lg bg-surface-subtle hover:bg-zinc-800 border border-surface-border text-zinc-300 transition text-xs flex items-center gap-1.5" title="Refresh">
+        <button onclick="loadDataFromFirebase()"
+          class="px-3 py-1.5 rounded-lg bg-surface-subtle hover:bg-zinc-800 border border-surface-border text-zinc-300 transition text-xs flex items-center gap-1.5"
+          title="Refresh">
           <i class="fa-solid fa-arrows-rotate"></i>
         </button>
 
         <!-- Clear Logs Button -->
-        <button onclick="clearDatabaseLogs()" class="px-3 py-1.5 rounded-lg bg-rose-950/50 hover:bg-rose-900/60 border border-rose-800/60 text-rose-300 transition text-xs flex items-center gap-1.5" title="Kosongkan Tabel">
+        <button onclick="clearDatabaseLogs()"
+          class="px-3 py-1.5 rounded-lg bg-rose-950/50 hover:bg-rose-900/60 border border-rose-800/60 text-rose-300 transition text-xs flex items-center gap-1.5"
+          title="Kosongkan Tabel">
           <i class="fa-solid fa-trash-can"></i>
           <span>Hapus</span>
         </button>
@@ -154,7 +171,8 @@
     <div class="bg-surface-card border border-surface-border rounded-xl overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs text-zinc-300">
-          <thead class="text-[11px] text-zinc-400 uppercase font-medium bg-surface-subtle/80 border-b border-surface-border">
+          <thead
+            class="text-[11px] text-zinc-400 uppercase font-medium bg-surface-subtle/80 border-b border-surface-border">
             <tr>
               <th class="py-2.5 px-4 font-mono">No</th>
               <th class="py-2.5 px-4">Waktu Record</th>
@@ -176,7 +194,8 @@
       </div>
 
       <!-- Table Footer / Count -->
-      <div class="px-4 py-2.5 border-t border-surface-border/60 text-xs text-zinc-500 flex items-center justify-between">
+      <div
+        class="px-4 py-2.5 border-t border-surface-border/60 text-xs text-zinc-500 flex items-center justify-between">
         <span>Menampilkan <b id="showingCount" class="text-zinc-300 font-mono">0</b> baris data</span>
         <span class="text-[11px] font-mono text-zinc-500">Firebase Path: /logs</span>
       </div>
@@ -312,11 +331,11 @@
       }
       let csv = "data:text/csv;charset=utf-8,No,Waktu,Level,Suhu_C,Kelembaban,Gas_AO,Flame,RSSI,Keterangan\n";
       allRecords.forEach((r, i) => {
-        csv += `"${i+1}","${r.timestamp}","${r.level}","${r.temp}","${r.hum}","${r.gasAO}","${r.flame}","${r.rssi}","${r.note}"\n`;
+        csv += `"${i + 1}","${r.timestamp}","${r.level}","${r.temp}","${r.hum}","${r.gasAO}","${r.flame}","${r.rssi}","${r.note}"\n`;
       });
       const link = document.createElement("a");
       link.setAttribute("href", encodeURI(csv));
-      link.setAttribute("download", `Firebase_FireGuard_Database_${new Date().toISOString().slice(0,10)}.csv`);
+      link.setAttribute("download", `Firebase_FireGuard_Database_${new Date().toISOString().slice(0, 10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -341,8 +360,10 @@
   </script>
 
   <!-- DIAGRAM SCHEMA MODAL -->
-  <div id="diagramModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-surface-card border border-surface-border rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+  <div id="diagramModal"
+    class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      class="bg-surface-card border border-surface-border rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       <!-- Modal Header -->
       <div class="px-5 py-4 border-b border-surface-border flex items-center justify-between">
         <div class="flex items-center gap-2.5">
@@ -362,20 +383,26 @@
           <div class="border border-sky-500/40 bg-sky-950/20 rounded-xl p-4">
             <div class="flex items-center justify-between pb-2 mb-2 border-b border-sky-500/30">
               <span class="font-mono font-bold text-sky-400 text-sm">/monitoring</span>
-              <span class="text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded font-mono">Single Live State</span>
+              <span class="text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded font-mono">Single Live
+                State</span>
             </div>
-            <p class="text-[11px] text-zinc-400 mb-3">Menampung data telemetri terkini. Selalu di-overwrite per detik.</p>
+            <p class="text-[11px] text-zinc-400 mb-3">Menampung data telemetri terkini. Selalu di-overwrite per detik.
+            </p>
             <div class="font-mono space-y-1 text-[11px]">
               <div><span class="text-zinc-500">nodeId:</span> <span class="text-zinc-200">String (TX-01)</span></div>
-              <div><span class="text-zinc-500">level:</span> <span class="text-amber-400">Int (0=Aman, 1=Waspada, 2=Bahaya)</span></div>
+              <div><span class="text-zinc-500">level:</span> <span class="text-amber-400">Int (0=Aman, 1=Waspada,
+                  2=Bahaya)</span></div>
               <div><span class="text-zinc-500">temp:</span> <span class="text-rose-400">Float (°C - DHT22)</span></div>
               <div><span class="text-zinc-500">hum:</span> <span class="text-sky-400">Float (% - DHT22)</span></div>
-              <div><span class="text-zinc-500">gasAO:</span> <span class="text-amber-300">Int (0-4095 - MQ-2)</span></div>
+              <div><span class="text-zinc-500">gasAO:</span> <span class="text-amber-300">Int (0-4095 - MQ-2)</span>
+              </div>
               <div><span class="text-zinc-500">gas:</span> <span class="text-zinc-300">Int (0/1 Digital)</span></div>
-              <div><span class="text-zinc-500">flame:</span> <span class="text-rose-500">Int (0:Padam, 1:Ada Api)</span></div>
+              <div><span class="text-zinc-500">flame:</span> <span class="text-rose-500">Int (0:Padam, 1:Ada Api)</span>
+              </div>
               <div><span class="text-zinc-500">flameAO:</span> <span class="text-zinc-300">Int (0-4095 ADC)</span></div>
               <div><span class="text-zinc-500">rssi:</span> <span class="text-emerald-400">Int (dBm LoRa)</span></div>
-              <div><span class="text-zinc-500">lastUpdate:</span> <span class="text-zinc-400">String (Waktu)</span></div>
+              <div><span class="text-zinc-500">lastUpdate:</span> <span class="text-zinc-400">String (Waktu)</span>
+              </div>
             </div>
           </div>
 
@@ -383,18 +410,25 @@
           <div class="border border-amber-500/40 bg-amber-950/20 rounded-xl p-4">
             <div class="flex items-center justify-between pb-2 mb-2 border-b border-amber-500/30">
               <span class="font-mono font-bold text-amber-400 text-sm">/logs/{push_id}</span>
-              <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">Time-Series List</span>
+              <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">Time-Series
+                List</span>
             </div>
-            <p class="text-[11px] text-zinc-400 mb-3">Pencatatan riwayat anomali & kebakaran. Disimpan permanen (Append).</p>
+            <p class="text-[11px] text-zinc-400 mb-3">Pencatatan riwayat anomali & kebakaran. Disimpan permanen
+              (Append).</p>
             <div class="font-mono space-y-1 text-[11px]">
-              <div><span class="text-zinc-500">log_id [PK]:</span> <span class="text-zinc-200">String (Auto Key)</span></div>
-              <div><span class="text-zinc-500">timestamp:</span> <span class="text-zinc-300">String (YYYY-MM-DD HH:mm:ss)</span></div>
+              <div><span class="text-zinc-500">log_id [PK]:</span> <span class="text-zinc-200">String (Auto Key)</span>
+              </div>
+              <div><span class="text-zinc-500">timestamp:</span> <span class="text-zinc-300">String (YYYY-MM-DD
+                  HH:mm:ss)</span></div>
               <div><span class="text-zinc-500">level:</span> <span class="text-amber-400">Int (1 / 2)</span></div>
-              <div><span class="text-zinc-500">temp:</span> <span class="text-rose-400">Float (°C saat kejadian)</span></div>
+              <div><span class="text-zinc-500">temp:</span> <span class="text-rose-400">Float (°C saat kejadian)</span>
+              </div>
               <div><span class="text-zinc-500">gasAO:</span> <span class="text-amber-300">Int (Kadar gas)</span></div>
               <div><span class="text-zinc-500">flame:</span> <span class="text-rose-500">Int (Status Api)</span></div>
-              <div><span class="text-zinc-500">rssi:</span> <span class="text-emerald-400">Int (Kekuatan LoRa)</span></div>
-              <div><span class="text-zinc-500">note:</span> <span class="text-zinc-300">String (Keterangan Kejadian)</span></div>
+              <div><span class="text-zinc-500">rssi:</span> <span class="text-emerald-400">Int (Kekuatan LoRa)</span>
+              </div>
+              <div><span class="text-zinc-500">note:</span> <span class="text-zinc-300">String (Keterangan
+                  Kejadian)</span></div>
             </div>
           </div>
         </div>
@@ -402,18 +436,20 @@
         <!-- Documentation reference -->
         <div class="p-3 bg-surface-subtle border border-surface-border rounded-xl text-zinc-400 text-xs">
           <i class="fa-solid fa-circle-info text-sky-400 mr-1.5"></i>
-          Dokumentasi lengkap dan kode Mermaid ERD tersedia di file: <code class="text-sky-300 font-mono">monitoring/database/DIAGRAM.md</code>
+          Dokumentasi lengkap dan kode Mermaid ERD tersedia di file: <code
+            class="text-sky-300 font-mono">monitoring/database/DIAGRAM.md</code>
         </div>
       </div>
 
       <!-- Modal Footer -->
       <div class="px-5 py-3 border-t border-surface-border bg-surface-subtle flex justify-end">
-        <button onclick="toggleDiagramModal(false)" class="px-4 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-white transition">
+        <button onclick="toggleDiagramModal(false)"
+          class="px-4 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-white transition">
           Tutup
         </button>
       </div>
     </div>
   </div>
 </body>
-</html>
 
+</html>
