@@ -22,3 +22,4 @@ private:
   uint32_t _lastLogPush = 0;
   uint8_t  _lastLevel = 0;
 };
+

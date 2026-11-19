@@ -43,3 +43,4 @@ Ganti `"NamaHotspotKamu"` dan `"PasswordHotspotKamu"` sesuai Hotspot HP kamu (pa
    - Sinyal terkirim via LoRa 433 MHz ke RX.
    - RX langsung meneruskan data ke Cloud Firebase via Wi-Fi.
    - Web Dashboard di laptop langsung berkedip merah dan memutar sirine alarm secara real-time!
+

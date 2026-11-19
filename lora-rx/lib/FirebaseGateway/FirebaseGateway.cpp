@@ -134,3 +134,4 @@ bool FirebaseGateway::pushIncidentLog(const SensorPacket &p, int rssi, const cha
   https.end();
   return success;
 }
+
