@@ -250,7 +250,7 @@
         </div>
         <div class="mt-2.5 flex items-center justify-between text-[11px]">
           <span class="text-zinc-400" id="gasStatusText">Udara Bersih</span>
-          <span class="font-mono text-zinc-500 text-[10px]">Batas: > 1800</span>
+          <span class="font-mono text-zinc-500 text-[10px]">Batas: &gt; 1800</span>
         </div>
         <div class="mt-2 w-full bg-zinc-800/80 rounded-full h-1.5 overflow-hidden">
           <div id="gasBar" class="bg-emerald-500 h-1.5 rounded-full transition-all duration-300" style="width: 16%"></div>
@@ -320,7 +320,7 @@
             </div>
             <div class="flex items-center justify-between py-1.5 border-b border-surface-border/60">
               <span class="text-zinc-500">Batas Asap MQ-2</span>
-              <span class="font-mono text-amber-400">> 1800 ADC</span>
+              <span class="font-mono text-amber-400">&gt; 1800 ADC</span>
             </div>
             <div class="flex items-center justify-between py-1.5 border-b border-surface-border/60">
               <span class="text-zinc-500">Buzzer Bahaya</span>
@@ -395,6 +395,8 @@
 
   <!-- JAVASCRIPT LOGIC & FIREBASE INTEGRATION -->
   <script>
+    /* eslint-disable */
+    /* global firebase, Chart */
     // ==========================================
     // 1. FIREBASE CONFIGURATION & INITIALIZATION
     // ==========================================
