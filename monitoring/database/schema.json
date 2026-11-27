@@ -1,0 +1,26 @@
+{
+  "monitoring": {
+    "level": 0,
+    "flame": 0,
+    "gas": 0,
+    "gasAO": 195,
+    "flameAO": 3890,
+    "temp": 29.4,
+    "hum": 62.0,
+    "rssi": -72,
+    "nodeId": "TX-01",
+    "lastUpdate": "2026-11-13 16:45:00"
+  },
+  "logs": {
+    "sample_id": {
+      "timestamp": "2026-11-13 16:45:00",
+      "level": 2,
+      "temp": 58.2,
+      "gasAO": 810,
+      "flame": 1,
+      "rssi": -78,
+      "note": "Peringatan Bahaya: Api terdeteksi pada sensor"
+    }
+  }
+}
+

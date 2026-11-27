@@ -4,10 +4,12 @@
 #include "LoraLink.h"
 #include "FireDisplay.h"
 #include "Buzzer.h"
+#include "FirebaseGateway.h"
 
 LcdHelper lcd(LCD_ADDR, 16, 2, SDA_PIN, SCL_PIN);
 LoraLink  lora(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_RST, LORA_DIO0, (long)LORA_FREQ, LORA_SYNC);
 Buzzer buzzer(BUZZER_PIN, BUZZER_FREQ_ALARM, BUZZER_FREQ_WARN, BUZZER_FREQ_FAULT);
+FirebaseGateway gateway;
 
 SensorPacket last;
 uint32_t lastRx = 0;
@@ -26,18 +28,28 @@ void setup() {
 
   lcd.printRow(0, 0, "Menunggu data...");
   lcd.printRow(0, 1, "");
+
+  // Hubungkan ke Wi-Fi & Firebase (Non-blocking)
+  gateway.begin(WIFI_SSID, WIFI_PASSWORD, FIREBASE_HOST);
 }
 
 void loop() {
   static uint32_t lastPage = 0;
   static uint8_t page = 0;
 
+  // Background auto-reconnect Wi-Fi
+  gateway.update();
+
   bool newData = lora.receive(last);
   if (newData) {
     lastRx = millis();
     linkOk = true;
     buzzer.setMode(Buzzer::fromLevel(last.level));
-    Serial.printf("RX lvl=%d api=%d gas=%d(AO=%d) fAO=%d T=%.1f H=%.1f RSSI=%d dBm\n", last.level, last.flame, last.gas, last.gasAO, last.flameAO, last.temp, last.hum, lora.rssi());
+    Serial.printf("RX lvl=%d api=%d gas=%d(AO=%d) fAO=%d T=%.1f H=%.1f RSSI=%d dBm\n", 
+      last.level, last.flame, last.gas, last.gasAO, last.flameAO, last.temp, last.hum, lora.rssi());
+
+    // Otomatis kirim data telemetri ke Cloud Firebase
+    gateway.pushMonitoring(last, lora.rssi());
   }
 
   if (linkOk && lastRx != 0 && millis() - lastRx > LINK_TIMEOUT_MS) {

@@ -1,0 +1,51 @@
+// ==========================================================
+// Database: Sistem Pendeteksi Kebakaran Berbasis LoRa (WMC)
+// Disesuaikan 1:1 dengan struct SensorPacket & variable.h C++
+// ==========================================================
+
+// 1. DATA PERANGKAT & PARAMETER RADIO LORA (variable.h)
+Table perangkat_lora {
+  id varchar [pk, note: 'Kode unik node: TX-01 atau RX-GATEWAY']
+  peran varchar [note: 'TRANSMITTER atau RECEIVER']
+  lora_freq float [default: 433.0, note: 'LORA_FREQ: 433E6 (433.0 MHz)']
+  lora_sync varchar [default: '0xF3', note: 'LORA_SYNC: 0xF3']
+  link_timeout_ms int [default: 5000, note: 'LINK_TIMEOUT_MS: 5000 ms (5 detik)']
+}
+
+// 2. DATA TELEMETRI SENSOR (struct SensorPacket)
+Table sensor_packet {
+  node_id varchar [pk, ref: - perangkat_lora.id]
+  level int [note: 'uint8_t level: 0 = AMAN, 1 = WASPADA, 2 = BAHAYA']
+  flame boolean [note: 'bool flame: Digital sensor api']
+  gas boolean [note: 'bool gas: Digital sensor gas MQ-2']
+  dhtOk boolean [note: 'bool dhtOk: Status kesiapan sensor DHT22']
+  flameAO int [note: 'uint16_t flameAO: Nilai analog ADC sensor api']
+  gasAO int [note: 'uint16_t gasAO: Nilai analog ADC sensor gas MQ-2']
+  temp float [note: 'float temp: Suhu lingkungan (°C) dari DHT22']
+  hum float [note: 'float hum: Kelembaban udara (%) dari DHT22']
+  rssi int [note: 'int rssi: Kekuatan sinyal radio LoRa (dBm)']
+  last_received timestamp [note: 'Waktu penerimaan paket di ESP32 RX']
+}
+
+// 3. MONITORING KUALITAS LINK NIRKABEL (Evaluasi WMC)
+Table link_lora_status {
+  id int [pk, increment]
+  node_id varchar [ref: > perangkat_lora.id]
+  rssi int [note: 'Nilai RSSI (dBm)']
+  link_ok boolean [note: 'bool linkOk: true jika terhubung, false jika timeout > 5s']
+  status_display varchar [note: 'Tampilan LCD: "Menunggu data" / "Link putus, Cek TX"']
+  timestamp timestamp
+}
+
+// 4. RIWAYAT DETEKSI BAHAYA (Logs Insiden Kebakaran)
+Table riwayat_kebakaran {
+  id varchar [pk, note: 'Unique Push Key Firebase']
+  node_id varchar [ref: > perangkat_lora.id]
+  level int [note: '1 = WASPADA, 2 = BAHAYA']
+  temp float [note: 'Suhu puncak saat kejadian (°C)']
+  gasAO int [note: 'Kadar gas AO tertinggi saat kejadian']
+  flame boolean [note: 'Kondisi sensor api saat insiden']
+  buzzer_mode varchar [note: 'BUZZER_FREQ_ALARM (2700Hz) / BUZZER_FREQ_WARN (2000Hz)']
+  keterangan varchar [note: 'Catatan ringkas kejadian']
+  timestamp timestamp
+}

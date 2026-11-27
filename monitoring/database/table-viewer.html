@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Table Viewer — FireGuard LoRa</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            surface: {
+              DEFAULT: '#111216',
+              subtle: '#18191f',
+              card: '#14151b',
+              border: '#232530',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0c0e;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0b0c0e;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #232530;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body class="text-zinc-200 min-h-screen flex flex-col antialiased">
+
+  <!-- HEADER -->
+  <header class="border-b border-surface-border/70 bg-[#0b0c0e]/90 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="../web/index.html" class="text-xs text-zinc-400 hover:text-white flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-arrow-left text-[11px]"></i>
+          <span>Dashboard Web</span>
+        </a>
+        <span class="text-zinc-600">/</span>
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-table-cells text-sky-400 text-sm"></i>
+          <span class="font-semibold text-sm text-white">Database Table Explorer</span>
+        </div>
+          <a href="diagram-visual.html"
+            class="hidden md:flex px-2.5 py-1 rounded-md bg-surface-subtle hover:bg-zinc-800 text-xs text-sky-400 border border-surface-border items-center gap-1.5 transition ml-2">
+            <i class="fa-solid fa-diagram-project text-[11px]"></i>
+        <span>Diagram Visual</span>
+        </a>
+      </div>
+
+      <!-- Firebase Status Indicator -->
+      <div
+        class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-subtle border border-surface-border text-xs">
+        <span class="relative flex h-1.5 w-1.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+        </span>
+        <span class="text-zinc-400">Firebase RTDB:</span>
+        <span class="font-mono text-emerald-400 font-medium" id="statusConnection">Tersambung (Live)</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-5">
+
+    <!-- STATS SUMMARY CARDS -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-surface-card border border-surface-border rounded-xl p-3.5">
+        <span class="text-[11px] text-zinc-500 uppercase tracking-wider block">Total Record Tersimpan</span>
+        <div class="text-xl font-bold font-mono text-white mt-1" id="statTotal">0</div>
+      </div>
+      <div class="bg-surface-card border border-surface-border rounded-xl p-3.5">
+        <span class="text-[11px] text-zinc-500 uppercase tracking-wider block">Insiden Bahaya (Lvl 2)</span>
+        <div class="text-xl font-bold font-mono text-rose-400 mt-1" id="statDanger">0</div>
+      </div>
+      <div class="bg-surface-card border border-surface-border rounded-xl p-3.5">
+        <span class="text-[11px] text-zinc-500 uppercase tracking-wider block">Peringatan Waspada (Lvl 1)</span>
+        <div class="text-xl font-bold font-mono text-amber-400 mt-1" id="statWarning">0</div>
+      </div>
+      <div class="bg-surface-card border border-surface-border rounded-xl p-3.5">
+        <span class="text-[11px] text-zinc-500 uppercase tracking-wider block">Kondisi Normal (Lvl 0)</span>
+        <div class="text-xl font-bold font-mono text-emerald-400 mt-1" id="statSafe">0</div>
+      </div>
+    </div>
+
+    <!-- TABLE CONTROLS (SEARCH, FILTER, EXPORT) -->
+    <div
+      class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface-card border border-surface-border rounded-xl p-3">
+      <!-- Search -->
+      <div class="relative flex-1 max-w-sm">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-zinc-500 text-xs"></i>
+        <input type="text" id="searchInput" oninput="filterTable()" placeholder="Cari tanggal, waktu, atau catatan..."
+          class="w-full bg-surface-subtle border border-surface-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500 font-sans">
+      </div>
+
+      <!-- Filters & Action Buttons -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Filter Level -->
+        <select id="levelFilter" onchange="filterTable()"
+          class="bg-surface-subtle border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-sky-500">
+          <option value="all">Semua Status</option>
+          <option value="2">Level 2 (Bahaya)</option>
+          <option value="1">Level 1 (Waspada)</option>
+          <option value="0">Level 0 (Aman)</option>
+        </select>
+
+        <!-- Export CSV Button -->
+        <button onclick="exportCSV()"
+          class="px-3 py-1.5 rounded-lg bg-emerald-950/70 border border-emerald-700/60 text-emerald-300 hover:bg-emerald-800/60 transition text-xs flex items-center gap-1.5">
+          <i class="fa-solid fa-file-csv"></i>
+          <span>Export Excel / CSV</span>
+        </button>
+
+        <!-- Refresh Button -->
+        <button onclick="loadDataFromFirebase()"
+          class="px-3 py-1.5 rounded-lg bg-surface-subtle hover:bg-zinc-800 border border-surface-border text-zinc-300 transition text-xs flex items-center gap-1.5"
+          title="Refresh">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
+
+        <!-- Clear Logs Button -->
+        <button onclick="clearDatabaseLogs()"
+          class="px-3 py-1.5 rounded-lg bg-rose-950/50 hover:bg-rose-900/60 border border-rose-800/60 text-rose-300 transition text-xs flex items-center gap-1.5"
+          title="Kosongkan Tabel">
+          <i class="fa-solid fa-trash-can"></i>
+          <span>Hapus</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TABLE VIEW -->
+    <div class="bg-surface-card border border-surface-border rounded-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs text-zinc-300">
+          <thead
+            class="text-[11px] text-zinc-400 uppercase font-medium bg-surface-subtle/80 border-b border-surface-border">
+            <tr>
+              <th class="py-2.5 px-4 font-mono">No</th>
+              <th class="py-2.5 px-4">Waktu Record</th>
+              <th class="py-2.5 px-4">Status Bahaya</th>
+              <th class="py-2.5 px-4 font-mono">Suhu (°C)</th>
+              <th class="py-2.5 px-4 font-mono">Kelembaban</th>
+              <th class="py-2.5 px-4 font-mono">Gas MQ-2 (AO)</th>
+              <th class="py-2.5 px-4">Flame Sensor</th>
+              <th class="py-2.5 px-4 font-mono">LoRa RSSI</th>
+              <th class="py-2.5 px-4 text-right">Keterangan / Kejadian</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-surface-border/50 text-[11px]">
+            <tr>
+              <td colspan="9" class="py-6 text-center text-zinc-500">Memuat data dari Firebase...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Table Footer / Count -->
+      <div
+        class="px-4 py-2.5 border-t border-surface-border/60 text-xs text-zinc-500 flex items-center justify-between">
+        <span>Menampilkan <b id="showingCount" class="text-zinc-300 font-mono">0</b> baris data</span>
+        <span class="text-[11px] font-mono text-zinc-500">Firebase Path: /logs</span>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4E7rUmDn4JjzTkGIugt00ngWolYF_vX4",
+      authDomain: "sistem-pendeteksi-kebaka-bac09.firebaseapp.com",
+      databaseURL: "https://sistem-pendeteksi-kebaka-bac09-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "sistem-pendeteksi-kebaka-bac09",
+      storageBucket: "sistem-pendeteksi-kebaka-bac09.firebasestorage.app",
+      messagingSenderId: "451499600424",
+      appId: "1:451499600424:web:3e22c8ebd1ba358f4ae31d",
+      measurementId: "G-CEQQJ5V16F"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let allRecords = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadDataFromFirebase();
+
+      // Listen connection status
+      db.ref('.info/connected').on('value', (snap) => {
+        const el = document.getElementById('statusConnection');
+        if (snap.val() === true) {
+          el.textContent = 'Tersambung (Live)';
+          el.className = 'font-mono text-emerald-400 font-medium';
+        } else {
+          el.textContent = 'Terputus';
+          el.className = 'font-mono text-zinc-500 font-medium';
+        }
+      });
+    });
+
+    function loadDataFromFirebase() {
+      // Listen to /logs in real-time
+      db.ref('logs').on('value', (snapshot) => {
+        const data = snapshot.val();
+        allRecords = [];
+
+        if (data) {
+          Object.keys(data).forEach((key) => {
+            const item = data[key];
+            allRecords.push({
+              id: key,
+              timestamp: item.timestamp || item.waktu || '-',
+              level: Number(item.level !== undefined ? item.level : 0),
+              temp: item.temp !== undefined ? Number(item.temp).toFixed(1) : '-',
+              hum: item.hum !== undefined ? item.hum + '%' : '-',
+              gasAO: item.gasAO !== undefined ? item.gasAO : '-',
+              flame: item.flame !== undefined ? item.flame : 0,
+              rssi: item.rssi !== undefined ? item.rssi + ' dBm' : '-72 dBm',
+              note: item.note || item.keterangan || '-'
+            });
+          });
+          allRecords.reverse(); // Newest first
+        }
+
+        updateStats();
+        filterTable();
+      });
+    }
+
+    function updateStats() {
+      document.getElementById('statTotal').textContent = allRecords.length;
+      document.getElementById('statDanger').textContent = allRecords.filter(r => r.level === 2).length;
+      document.getElementById('statWarning').textContent = allRecords.filter(r => r.level === 1).length;
+      document.getElementById('statSafe').textContent = allRecords.filter(r => r.level === 0).length;
+    }
+
+    function filterTable() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const levelVal = document.getElementById('levelFilter').value;
+
+      const filtered = allRecords.filter(item => {
+        const matchSearch = item.timestamp.toLowerCase().includes(search) || item.note.toLowerCase().includes(search);
+        const matchLevel = levelVal === 'all' || String(item.level) === levelVal;
+        return matchSearch && matchLevel;
+      });
+
+      renderTable(filtered);
+    }
+
+    function renderTable(dataList) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      document.getElementById('showingCount').textContent = dataList.length;
+
+      if (dataList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="py-8 text-center text-zinc-500">Tidak ada data yang cocok atau tabel masih kosong.</td></tr>';
+        return;
+      }
+
+      dataList.forEach((row, idx) => {
+        let levelBadge = '';
+        if (row.level === 2) {
+          levelBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>Bahaya</span>';
+        } else if (row.level === 1) {
+          levelBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Waspada</span>';
+        } else {
+          levelBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Normal</span>';
+        }
+
+        const flameText = row.flame === 1 ? '<span class="text-rose-400 font-semibold">Ada Api</span>' : '<span class="text-zinc-500">Padam</span>';
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-surface-subtle/50 transition';
+        tr.innerHTML = `
+          <td class="py-2.5 px-4 font-mono text-zinc-500">${idx + 1}</td>
+          <td class="py-2.5 px-4 font-mono text-zinc-300">${row.timestamp}</td>
+          <td class="py-2.5 px-4">${levelBadge}</td>
+          <td class="py-2.5 px-4 font-mono text-zinc-200">${row.temp}°C</td>
+          <td class="py-2.5 px-4 font-mono text-zinc-400">${row.hum}</td>
+          <td class="py-2.5 px-4 font-mono text-zinc-200">${row.gasAO}</td>
+          <td class="py-2.5 px-4">${flameText}</td>
+          <td class="py-2.5 px-4 font-mono text-zinc-500">${row.rssi}</td>
+          <td class="py-2.5 px-4 text-right text-zinc-400">${row.note}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function exportCSV() {
+      if (allRecords.length === 0) {
+        alert('Tidak ada data dalam database untuk diekspor!');
+        return;
+      }
+      let csv = "data:text/csv;charset=utf-8,No,Waktu,Level,Suhu_C,Kelembaban,Gas_AO,Flame,RSSI,Keterangan\n";
+      allRecords.forEach((r, i) => {
+        csv += `"${i + 1}","${r.timestamp}","${r.level}","${r.temp}","${r.hum}","${r.gasAO}","${r.flame}","${r.rssi}","${r.note}"\n`;
+      });
+      const link = document.createElement("a");
+      link.setAttribute("href", encodeURI(csv));
+      link.setAttribute("download", `Firebase_FireGuard_Database_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function clearDatabaseLogs() {
+      if (confirm('Yakin ingin mengosongkan seluruh data di tabel Firebase (/logs)?')) {
+        db.ref('logs').remove()
+          .then(() => alert('Tabel log database berhasil dikosongkan!'))
+          .catch(e => alert('Gagal menghapus: ' + e.message));
+      }
+    }
+
+    function toggleDiagramModal(show) {
+      const modal = document.getElementById('diagramModal');
+      if (show) {
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+  </script>
+
+  <!-- DIAGRAM SCHEMA MODAL -->
+  <div id="diagramModal"
+    class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      class="bg-surface-card border border-surface-border rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-surface-border flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-diagram-project text-sky-400"></i>
+          <h3 class="text-sm font-semibold text-white">Diagram Skema Database (Firebase NoSQL / ERD)</h3>
+        </div>
+        <button onclick="toggleDiagramModal(false)" class="text-zinc-400 hover:text-white text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-6 overflow-y-auto space-y-6 text-xs text-zinc-300">
+        <!-- Visual Relationship Box -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Node 1: Monitoring -->
+          <div class="border border-sky-500/40 bg-sky-950/20 rounded-xl p-4">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-sky-500/30">
+              <span class="font-mono font-bold text-sky-400 text-sm">/monitoring</span>
+              <span class="text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded font-mono">Single Live
+                State</span>
+            </div>
+            <p class="text-[11px] text-zinc-400 mb-3">Menampung data telemetri terkini. Selalu di-overwrite per detik.
+            </p>
+            <div class="font-mono space-y-1 text-[11px]">
+              <div><span class="text-zinc-500">nodeId:</span> <span class="text-zinc-200">String (TX-01)</span></div>
+              <div><span class="text-zinc-500">level:</span> <span class="text-amber-400">Int (0=Aman, 1=Waspada,
+                  2=Bahaya)</span></div>
+              <div><span class="text-zinc-500">temp:</span> <span class="text-rose-400">Float (°C - DHT22)</span></div>
+              <div><span class="text-zinc-500">hum:</span> <span class="text-sky-400">Float (% - DHT22)</span></div>
+              <div><span class="text-zinc-500">gasAO:</span> <span class="text-amber-300">Int (0-4095 - MQ-2)</span>
+              </div>
+              <div><span class="text-zinc-500">gas:</span> <span class="text-zinc-300">Int (0/1 Digital)</span></div>
+              <div><span class="text-zinc-500">flame:</span> <span class="text-rose-500">Int (0:Padam, 1:Ada Api)</span>
+              </div>
+              <div><span class="text-zinc-500">flameAO:</span> <span class="text-zinc-300">Int (0-4095 ADC)</span></div>
+              <div><span class="text-zinc-500">rssi:</span> <span class="text-emerald-400">Int (dBm LoRa)</span></div>
+              <div><span class="text-zinc-500">lastUpdate:</span> <span class="text-zinc-400">String (Waktu)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Node 2: Logs -->
+          <div class="border border-amber-500/40 bg-amber-950/20 rounded-xl p-4">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-amber-500/30">
+              <span class="font-mono font-bold text-amber-400 text-sm">/logs/{push_id}</span>
+              <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">Time-Series
+                List</span>
+            </div>
+            <p class="text-[11px] text-zinc-400 mb-3">Pencatatan riwayat anomali & kebakaran. Disimpan permanen
+              (Append).</p>
+            <div class="font-mono space-y-1 text-[11px]">
+              <div><span class="text-zinc-500">log_id [PK]:</span> <span class="text-zinc-200">String (Auto Key)</span>
+              </div>
+              <div><span class="text-zinc-500">timestamp:</span> <span class="text-zinc-300">String (YYYY-MM-DD
+                  HH:mm:ss)</span></div>
+              <div><span class="text-zinc-500">level:</span> <span class="text-amber-400">Int (1 / 2)</span></div>
+              <div><span class="text-zinc-500">temp:</span> <span class="text-rose-400">Float (°C saat kejadian)</span>
+              </div>
+              <div><span class="text-zinc-500">gasAO:</span> <span class="text-amber-300">Int (Kadar gas)</span></div>
+              <div><span class="text-zinc-500">flame:</span> <span class="text-rose-500">Int (Status Api)</span></div>
+              <div><span class="text-zinc-500">rssi:</span> <span class="text-emerald-400">Int (Kekuatan LoRa)</span>
+              </div>
+              <div><span class="text-zinc-500">note:</span> <span class="text-zinc-300">String (Keterangan
+                  Kejadian)</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Documentation reference -->
+        <div class="p-3 bg-surface-subtle border border-surface-border rounded-xl text-zinc-400 text-xs">
+          <i class="fa-solid fa-circle-info text-sky-400 mr-1.5"></i>
+          Dokumentasi lengkap dan kode Mermaid ERD tersedia di file: <code
+            class="text-sky-300 font-mono">monitoring/database/DIAGRAM.md</code>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 border-t border-surface-border bg-surface-subtle flex justify-end">
+        <button onclick="toggleDiagramModal(false)"
+          class="px-4 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-white transition">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
